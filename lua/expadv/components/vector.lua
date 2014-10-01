@@ -84,21 +84,21 @@ VectorObj:AddVMOperator( "=", "n,v", "", function( Context, Trace, MemRef, Value
    Context.Trigger[MemRef] = Context.Trigger[MemRef] or ( Prev ~= Value )
 end )
 
-VectorObj:AddInlineOperator( "$", "n", "v", "(Context.Delta[@value 1] or Vector(0,0,0))" )
+VectorObj:AddInlineOperator( "$", "n", "v", "(Context.Delta[@value 1] or Vector( 0, 0, 0 ))" )
 
 /* -----------------------------------------------------------------------------------
 	@: Constructor
    --- */
 
-VectorComponent:AddInlineFunction( "vec", "", "v", "Vector(0, 0, 0)" )
-VectorComponent:AddInlineFunction( "vec", "n", "v", "Vector(@value 1, @value 1, @value 1)" )
-VectorComponent:AddInlineFunction( "vec", "n,n,n", "v", "Vector(@value 1, @value 2, @value 3)" )
+VectorComponent:AddInlineFunction( "vec", "", "v", "Vector( 0, 0, 0 )" )
+VectorComponent:AddInlineFunction( "vec", "n", "v", "Vector( @value 1, @value 1, @value 1 )" )
+VectorComponent:AddInlineFunction( "vec", "n,n,n", "v", "Vector( @value 1, @value 2, @value 3 )" )
 
 VectorComponent:AddFunctionHelper( "vec", "n,n,n", "Creates a vector object" )
 VectorComponent:AddFunctionHelper( "vec", "n", "Creates a vector object" )
 VectorComponent:AddFunctionHelper( "vec", "", "Creates a vector object" )
 
-VectorComponent:AddInlineFunction( "randVec", "n,n", "v", "Vector( $math.random(@value 1, @value 2), $math.random(@value 1, @value 2), $math.random(@value 1, @value 2) )" )
+VectorComponent:AddInlineFunction( "randVec", "n,n", "v", "Vector( $math.random( @value 1, @value 2 ), $math.random( @value 1, @value 2 ), $math.random( @value 1, @value 2 ) )" )
 VectorComponent:AddFunctionHelper( "randVec", "n,n", "Creates a random vector constrained to the given values" )
 
 /* -----------------------------------------------------------------------------------
@@ -125,6 +125,9 @@ VectorComponent:AddFunctionHelper( "setY", "v:n", "Sets the Y value of a vector"
 VectorComponent:AddPreparedFunction( "setZ", "v:n", "", "@value 1.z = @value 2" )
 VectorComponent:AddFunctionHelper( "setZ", "v:n", "Sets the Z value of a vector" )
 
+VectorComponent:AddPreparedFunction( "set", "v:v", "", "@value 1:Set( @value 2 )")
+VectorComponent:AddFunctionHelper( "setZ", "v:n", "Sets a vector to the value of another vector" )
+
 /* -----------------------------------------------------------------------------------
    @: Rotate
    --- */
@@ -149,7 +152,6 @@ VectorComponent:AddFunctionHelper( "angle", "v:v", "Returns the angle between tw
 /* -----------------------------------------------------------------------------------
    @: Useful
    --- */
-
 
 VectorComponent:AddInlineFunction( "cross", "v:v", "v", "@value 1:Cross( @value 2 )" )
 VectorComponent:AddFunctionHelper( "cross", "v:v", "Calculates the cross product of the 2 vectors (The vectors that defined the normal created by the 2 vectors). " )
@@ -186,6 +188,9 @@ VectorComponent:AddFunctionHelper( "lenghSqr", "v:", "Returns the squared length
 
 VectorComponent:AddInlineFunction( "insideAABox", "v:v,v", "b", "@value 1:WithinAABox( @value 2, @value 3 )" )
 VectorComponent:AddFunctionHelper( "insideAABox", "v:v,v", "Returns whenever the given vector is in a box created by the 2 other vectors." )
+
+VectorComponent:AddInlineFunction( "zero", "v:", "", "@value 1:zero( )" )
+VectorComponent:AddFunctionHelper( "zero", "v:v,v", "Sets a vectors x, y and z to 0." )
 
 /* -----------------------------------------------------------------------------------
    @: Headings

@@ -1,10 +1,10 @@
-/* --- --------------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------------
 @: Math Component
    --- */
 
 local MathComponent = EXPADV.AddComponent( "math" , true )
 
-/* --- --------------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------------
 @: Number Object
    --- */
 
@@ -13,7 +13,7 @@ Number:StringBuilder( function( Obj ) return tostring( Obj ) end )
 Number:DefaultAsLua( 0 )
 Number:AddAlias( "int" )
 
-/* --- --------------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------------
 @: Wire Support
    --- */
 
@@ -22,7 +22,7 @@ if WireLib then
    Number:WireOutput( "NORMAL" )
 end
 
-/* --- --------------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------------
 @: Logical and Comparison
    --- */
 
@@ -33,7 +33,7 @@ MathComponent:AddInlineOperator( "<", "n,n", "b", "(@value 1 < @value 2)" )
 MathComponent:AddInlineOperator( ">=", "n,n", "b", "(@value 1 >= @value 2)" )
 MathComponent:AddInlineOperator( "<=", "n,n", "b", "(@value 1 <= @value 2)" )
 
-/* --- --------------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------------
 @: Arithmetic
    --- */
 
@@ -44,7 +44,7 @@ MathComponent:AddInlineOperator( "/", "n,n", "n", "(@value 1 / @value 2)" )
 MathComponent:AddInlineOperator( "%", "n,n", "n", "(@value 1 % @value 2)" )
 MathComponent:AddInlineOperator( "^", "n,n", "n", "(@value 1 ^ @value 2)" )
  
-/* --- --------------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------------
 @: Operators
    --- */
 
@@ -52,7 +52,7 @@ MathComponent:AddInlineOperator( "is", "n", "b", "(@value 1 >= 1)" )
 MathComponent:AddInlineOperator( "not", "n", "b", "(@value 1 < 1)" )
 MathComponent:AddInlineOperator( "-", "n", "n", "(-@value 1)" )
 
-/* --- --------------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------------
 @: Bitwise
    --- */
 MathComponent:AddInlineOperator( "&", "n,n", "n", "bit.band(@value 1 , @value 2)" )
@@ -61,7 +61,7 @@ MathComponent:AddInlineOperator( "^^", "n,n", "n", "bit.bxor(@value 1 , @value 2
 MathComponent:AddInlineOperator( ">>", "n,n", "n", "bit.rshift(@value 1 , @value 2)" )
 MathComponent:AddInlineOperator( "<<", "n,n", "n", "bit.lshift(@value 1 , @value 2)" )
 
-/* --- --------------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------------
 @: Assigment
    --- */
 
@@ -115,7 +115,7 @@ Number:AddVMOperator( "--i", "n", "n", function( Context, Trace, MemRef )
    return Value - 1
 end )
 
-/* --- --------------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------------
 @: Casting
    --- */
 
@@ -123,7 +123,7 @@ MathComponent:AddInlineOperator( "string", "n", "s", "tostring(@value 1)" )
 MathComponent:AddInlineOperator( "boolean", "n", "s", "(@value 1 > 1)" )
 MathComponent:AddInlineOperator( "number", "n", "s", "($tonumber(@value 1) or 0)" )
 
-/* --- --------------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------------
 @: Max Value
    --- */
 
@@ -133,7 +133,7 @@ EXPADV.AddFunctionAlias( "max", "n,n,n,n" )
 EXPADV.AddFunctionAlias( "max", "n,n,n" )
 EXPADV.AddFunctionAlias( "max", "n,n" )
 
-/* --- --------------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------------
 @: Min Value
    --- */
 
@@ -143,7 +143,7 @@ EXPADV.AddFunctionAlias( "min", "n,n,n,n" )
 EXPADV.AddFunctionAlias( "min", "n,n,n" )
 EXPADV.AddFunctionAlias( "min", "n,n" )
 
-/* --- --------------------------------------------------------------------------------
+/* -----------------------------------------------------------------------------------
 @: General math
    --- */
 
