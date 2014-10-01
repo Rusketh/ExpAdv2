@@ -184,15 +184,15 @@ Component:AddFunctionHelper( "pauseNextFrame", "b", "While set to true the scree
 Component:AddInlineFunction( "nextFramePaused", "", "b", "((IsValid( Context.entity ) and Context.entity.Screen) and Context.entity:GetRenderingPaused( ) or false)" )
 Component:AddFunctionHelper( "pauseNextFrame", "b", "returns true, if the screens next frame is paused." )
 
-Component:AddPreparedFunction( "noFrameReresh", "b", "", [[
+Component:AddPreparedFunction( "noFrameRefresh", "b", "", [[
 if IsValid( Context.entity ) and Context.entity.Screen then
 	Context.entity:SetNoClearFrame( @value 1 )
 end]] )
 
-Component:AddFunctionHelper( "noFrameReresh", "b", "While set to true the screen will not draw the next frame." )
+Component:AddFunctionHelper( "noFrameRefresh", "b", "While set to true the screen will not draw the next frame." )
 
-Component:AddInlineFunction( "frameResheshDisabled", "", "b", "((IsValid( Context.entity ) and Context.entity.Screen) and Context.entity:GetNoClearFrame( ) or false)" )
-Component:AddFunctionHelper( "frameResheshDisabled", "b", "returns true, if the screens is set not to clear the screen each frame." )
+Component:AddInlineFunction( "frameRefreshDisabled", "", "b", "((IsValid( Context.entity ) and Context.entity.Screen) and Context.entity:GetNoClearFrame( ) or false)" )
+Component:AddFunctionHelper( "frameRefreshDisabled", "b", "returns true, if the screens is set not to clear the screen each frame." )
 
 EXPADV.SharedOperators( )
 
