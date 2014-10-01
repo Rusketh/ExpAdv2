@@ -190,7 +190,7 @@ VectorComponent:AddInlineFunction( "insideAABox", "v:v,v", "b", "@value 1:Within
 VectorComponent:AddFunctionHelper( "insideAABox", "v:v,v", "Returns whenever the given vector is in a box created by the 2 other vectors." )
 
 VectorComponent:AddInlineFunction( "zero", "v:", "", "@value 1:zero( )" )
-VectorComponent:AddFunctionHelper( "zero", "v:v,v", "Sets a vectors x, y and z to 0." )
+VectorComponent:AddFunctionHelper( "zero", "v:", "Sets a vectors x, y and z to 0." )
 
 /* -----------------------------------------------------------------------------------
    @: Headings
