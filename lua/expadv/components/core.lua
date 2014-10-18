@@ -228,6 +228,21 @@ if CLIENT then
 	end )
 end
 
+/* --- --------------------------------------------------------------------------------
+	@: Console
+   --- */
+
+local Component = EXPADV.AddComponent( "console" , true )
+
+Component.Author = "Szymekk"
+Component.Description = "Allows you to execute console commands."
+
+Component:AddVMFunction( "concmd", "s", "", function (Context, Trace, Command)
+	if CLIENT and Context.player ~= LocalPlayer( ) then return end
+	Context.player:ConCommand( Command )
+end )
+Component:AddFunctionHelper( "concmd", "s", "Executes console command." )
+
 /* --- -------------------------------------------------------------------------------
 	@: Events
    --- */
