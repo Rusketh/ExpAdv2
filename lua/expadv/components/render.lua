@@ -302,9 +302,9 @@ if CLIENT then
 		if !Entity.Context or !Entity.Context.event_drawHUD then return end
 
 		if Entity.EnableHUD then
-			Menu:AddOption( "Disable HUD Rendering", function( ) Entity.Context.EnableHUD = false end )
+			Menu:AddOption( "Disable HUD Rendering", function( ) Entity.EnableHUD = false end )
 		else
-			Menu:AddOption( "Enable HUD Rendering", function( ) Entity.Context.EnableHUD = true end )
+			Menu:AddOption( "Enable HUD Rendering", function( ) Entity.EnableHUD = true end )
 		end
 	end
 end
