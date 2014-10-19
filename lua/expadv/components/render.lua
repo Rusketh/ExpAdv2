@@ -258,11 +258,11 @@ Component:AddFunctionHelper( "screenToWorld", "v2", "Returns the position on scr
 	@: Hud functions
    --- */
 
-Component:AddPreparedFunction( "toscreen", "v", "v2", "@define T = @value 1:ToScreen( )", "Vector2( @T.x, @t.y )" )
-Component:AddFunctionHelper( "toscreen", "v", "Translates the vectors position into 2D client screen coordinates." )
+Component:AddPreparedFunction( "toScreen", "v", "v2", "@define T = @value 1:ToScreen( )", "Vector2( @T.x, @T.y )" )
+Component:AddFunctionHelper( "toScreen", "v", "Translates the vectors position into 2D client screen coordinates." )
 
-Component:AddInlineFunction( "isvisible", "v", "b", "@value 1:ToScreen( ).visible" )
-Component:AddFunctionHelper( "isvisible", "v", "Returns true if the vectors position is in clients view." )
+Component:AddInlineFunction( "isVisible", "v", "b", "@value 1:ToScreen( ).visible" )
+Component:AddFunctionHelper( "isVisible", "v", "Returns true if the vectors position is in clients view." )
 
 /* -----------------------------------------------------------------------------------
 	@: Hud Event
@@ -302,9 +302,9 @@ if CLIENT then
 		if !Entity.Context or !Entity.Context.event_drawHUD then return end
 
 		if Entity.EnableHUD then
-			Menu:AddOption( "Disable HUD Rendering", function( ) Entity.Context.EnableHUD = false end )
+			Menu:AddOption( "Disable HUD Rendering", function( ) Entity.EnableHUD = false end )
 		else
-			Menu:AddOption( "Enable HUD Rendering", function( ) Entity.Context.EnableHUD = true end )
+			Menu:AddOption( "Enable HUD Rendering", function( ) Entity.EnableHUD = true end )
 		end
 	end
 end
