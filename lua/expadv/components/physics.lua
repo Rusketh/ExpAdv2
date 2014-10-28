@@ -195,7 +195,7 @@ end)
 
 Component:AddFunctionHelper( "applyForce", "p:v", "Applies a vector of force on the given physics object.")
 
-Component:AddVMFunction( "applyOffsetForce", "e:v,v", "", function( Context, Trace, Phys, Pos1, Pos2 )
+Component:AddVMFunction( "applyOffsetForce", "p:v,v", "", function( Context, Trace, Phys, Pos1, Pos2 )
 	if Phys:IsValid() and VectorNotHuge( Pos1 ) and VectorNotHuge( Pos2 ) and EXPADV.PPCheck(Context.player, Phys:GetEntity( )) then
 		Phys:ApplyForceOffset(Pos1, Pos2)
 	end
