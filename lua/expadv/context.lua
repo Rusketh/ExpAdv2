@@ -206,7 +206,7 @@ end
 	@: Context registery.
 --- */
    
-local Registery = { }
+local Registery = EXPADV.CONTEXT_REGISTERY or { }
 
 EXPADV.CONTEXT_REGISTERY = Registery
 
@@ -282,7 +282,7 @@ end )
 	@: Reloading.
    --- */
 
-hook.Add( "ExpAdv2.UnloadCore", "expadv.context", function( )
+hook.Add( "Expadv.UnloadCore", "expadv.context", function( )
 	for Context, _ in pairs( Registery ) do
 		Context:ShutDown( )
 	end

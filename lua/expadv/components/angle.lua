@@ -163,13 +163,13 @@ Component:AddFunctionHelper( "rotateAroundAxis", "a:v,n", "Rotates the angle aro
 	@: Snap
    --- */
 
-Component:AddInlineFunction( "snapToPitch", "a:n", "a", [[@value 1@SnapTo("p",@value 2)]] )
+Component:AddInlineFunction( "snapToPitch", "a:n", "a", [[@value 1@:SnapTo("p",@value 2)]] )
 Component:AddFunctionHelper( "snapToPitch", "a:n", "Snaps the angle's pitch to nearest interval of degrees" )
 
-Component:AddInlineFunction( "snapToYaw", "a:n", "a", [[@value 1@SnapTo("y",@value 2)]] )
+Component:AddInlineFunction( "snapToYaw", "a:n", "a", [[@value 1@:SnapTo("y",@value 2)]] )
 Component:AddFunctionHelper( "snapToYaw", "a:n", "Snaps the angle's yaw to nearest interval of degrees" )
 
-Component:AddInlineFunction( "snapToRoll", "a:n", "a", [[@value 1@SnapTo("r",@value 2)]] )
+Component:AddInlineFunction( "snapToRoll", "a:n", "a", [[@value 1@:SnapTo("r",@value 2)]] )
 Component:AddFunctionHelper( "snapToRoll", "a:n", "Snaps the angle's roll to nearest interval of degrees" )
 
 /* --- --------------------------------------------------------------------------------
@@ -188,4 +188,17 @@ Component:AddInlineFunction( "toLocal", "e:a", "a", "(IsValid( @value 1 ) and @v
 Component:AddFunctionHelper( "toWorld", "e:a", "Converts a vector to a world vector." )
 Component:AddFunctionHelper( "toLocal", "e:a", "Converts a world vector to a local vector." )
 
+Component:AddVMFunction("toWorldAng", "v,a,v,a", "a", function(Context, Trace, LocalP, LocalA, WorldP, WorldA)
+	local Pos, Ang = LocalToWorld(LocalP, LocalA, WorldP, WorldA)
+	return Ang
+end)
+
+Component:AddFunctionHelper("toWorldAng", "v,a,v,a", "Translates the specified position and angle from the specified coordinate system into worldspace coordinates.")
+
+Component:AddVMFunction("toLocalAng", "v,a,v,a", "a", function(Context, Trace, LocalP, LocalA, WorldP, WorldA)
+	local Pos, Ang = WorldToLocal(LocalP, LocalA, WorldP, WorldA)
+	return Ang
+end)
+
+Component:AddFunctionHelper("toLocalAng", "v,a,v,a", "Translates the specified position and angle into the specified coordinate system.")
 

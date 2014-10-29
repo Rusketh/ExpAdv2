@@ -47,7 +47,7 @@ Component:AddInlineOperator( "+", "n,n", "n", "(@value 1 + @value 2)" )
 Component:AddInlineOperator( "-", "n,n", "n", "(@value 1 - @value 2)" )
 Component:AddInlineOperator( "*", "n,n", "n", "(@value 1 * @value 2)" )
 Component:AddInlineOperator( "/", "n,n", "n", "(@value 1 / @value 2)" )
-Component:AddInlineOperator( "%", "n,n", "n", "(@value 1 % @value 2)" )
+Component:AddInlineOperator( "%", "n,n", "n", "(@value 1 %% @value 2)" )
 Component:AddInlineOperator( "^", "n,n", "n", "(@value 1 ^ @value 2)" )
  
 /* --- --------------------------------------------------------------------------------
@@ -202,7 +202,7 @@ Component:AddInlineFunction( "abs", "n", "n", "((@value 1 >= 0) and @value 1 or 
 Component:AddFunctionHelper( "abs", "n", "returns the absolute value of the specified number." )
 
 
-Component:AddInlineFunction( "ceil", "n", "n", "@value 1 - @value 1 % -1)" ) ;
+Component:AddInlineFunction( "ceil", "n", "n", "(@value 1 - @value 1 % -1)" ) ;
 Component:AddFunctionHelper( "ceil", "n", "Rounds (number) to the nearest integer. (Upper) " )
 
 

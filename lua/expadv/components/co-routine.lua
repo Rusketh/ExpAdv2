@@ -29,22 +29,34 @@ CoRoutine:AddPreparedOperator( "=", "n,cr", "", "Context.Memory[@value 1] = @val
     @: Functions
    --- */
 
-Component:AddVMFunction( "coroutine", "d", "cr",
-	function( Context, Trace, Delegate )
-		return coroutine.create( function( ... )
-			Delegate( Context, ... )
-		end )
-	end )
+-- DEBUG FUNCTION!
+ Component:AddVMFunction( "coroutine", "d", "cr", function( Context, Trace, Function )
+ 	return coroutine.create( function( Context, ... )
+ 		local Ok, Result = pcall( Function, Context, ... )
+ 		if !Ok then
+ 			print( "CR-Error:", Result )
+ 			if istable( Result ) then
+ 				Result.Context = nil
+ 				PrintTable( Result )
+ 			end
+ 
+ 			error( Result, 0 )
+ 		end
+ 	end )
+ end )
+
+
+-- Component:AddInlineFunction( "coroutine", "d", "cr", "coroutine.create( @value 1 )" )
 
 Component:AddInlineFunction( "status", "cr:", "s", "$coroutine.status( @value 1 )" )
 
 Component:AddInlineFunction( "getCoroutine", "", "cr", [[( $coroutine.running( ) or Context:Throw( @trace, "coroutine", "Used getCoroutine( ) outside coroutine." ) )]] )
 
-Component:AddPreparedFunction( "resume", "cr:", "b", "Context.Status.BenchMark = $SysTime( )", "$coroutine.resume( @value 1 )" )
+Component:AddInlineFunction( "resume", "cr:", "b", "$coroutine.resume( @value 1, Context )" )
 
-Component:AddPreparedFunction( "resume", "cr:...", "b", "Context.Status.BenchMark = $SysTime( )", "$coroutine.resume( @value 1, @... )" )
+Component:AddInlineFunction( "resume", "cr:...", "b", "$coroutine.resume( @value 1,  Context, @... )" )
 
-Component:AddPreparedFunction( "yield", "", "", [[if !$coroutine.running( ) then Context:Throw( @trace, "coroutine", "Used yield( ) outside coroutine." ) else yield( ) end]] )
+Component:AddPreparedFunction( "yield", "", "", [[if !$coroutine.running( ) then Context:Throw( @trace, "coroutine", "Used yield( ) outside coroutine." ) else $coroutine.yield( ) end]] )
 
 Component:AddVMFunction( "sleep", "n", "",
 	function( Context, Trace, Value )

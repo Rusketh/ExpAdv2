@@ -390,7 +390,7 @@ VectorObj:AddPreparedOperator( "for", "v,v,v,?", "", [[
    for x = @value 1.x, @value 2.x, @value 3.x do
       for y = @value 1.y, @value 2.y, @value 3.y do
          for z = @value 1.z, @value 2.z, @value 3.z do
-            local i =  Vector(x,y,z) 
+            local i = Vector(x,y,z) 
             @prepare 4
          end
       end
@@ -400,7 +400,7 @@ VectorObj:AddPreparedOperator( "for", "v,v,v,?", "", [[
 Vector2Obj:AddPreparedOperator( "for", "v2,v2,v2,?", "", [[
    for x = @value 1.x, @value 2.x, @value 3.x do
       for y = @value 1.y, @value 2.y, @value 3.y do
-         local i =  Vector2(x,y) 
+         local i = Vector2(x,y) 
          @prepare 4        
       end
    end

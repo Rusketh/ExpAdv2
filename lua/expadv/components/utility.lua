@@ -208,7 +208,7 @@ function Ranger:Unfilter( Entity )
 	end
 end
 
-function Ranger:DoTrace( Start, End, Distance )
+function Ranger:DoTrace( Context, Start, End, Distance )
 	if Distance then
 		End = Start + ( End:GetNormalized( ) * Distance )
 	end
@@ -225,7 +225,10 @@ function Ranger:DoTrace( Start, End, Distance )
 			Filter[ #Filter + 1 ] = Entity
 		end
 	else
-		Filter = self.FilterFunc
+		Filter = function( Entity )
+			local Value, Type = self.FilterFunc( Context, {self, "_rd"}, { Entity, "e"} )
+			if Value ~= nil and Type == "b" then return Value end
+		end
 	end
 	
 	if self.Hit_Water then
@@ -312,13 +315,13 @@ Component:AddInlineFunction( "maxs", "rd:", "v", "( @value 1.Maxs or Vector( 0, 
 
 -- Do Trace
 
-Component:AddPreparedFunction( "fire", "rd:v,v", "", "@value 1:DoTrace( @value 2, @value 3 )" )
+Component:AddPreparedFunction( "fire", "rd:v,v", "", "@value 1:DoTrace( Context, @value 2, @value 3 )" )
 
-Component:AddPreparedFunction( "fire", "rd:v,v,n", "", "@value 1:DoTrace( @value 2, @value 3, @value 4 )" )
+Component:AddPreparedFunction( "fire", "rd:v,v,n", "", "@value 1:DoTrace( Context, @value 2, @value 3, @value 4 )" )
 
 Component:AddPreparedFunction( "fire", "rd:", "", [[
 if ( @value 1.Start and @value 1.End ) then
-	@value 1:DoTrace( @value 1.Start, @value 1.End )
+	@value 1:DoTrace( Context, @value 1.Start, @value 1.End )
 end]] )
 
 -- Start and End
@@ -335,7 +338,7 @@ Component:AddPreparedFunction( "unfilter", "rd:e", "", "@value 1:Unfilter( @valu
 
 Component:AddPreparedFunction( "clearFilter", "rd:", "", "@value 1.Filter = { }\n@value 1.FilterFunc = nil" )
 
-Component:AddInlineFunction( "setFilter", "rd:d", "", "@value 1.FilterFunc = @value 2" )
+Component:AddPreparedFunction( "setFilter", "rd:d", "", "@value 1.FilterFunc = @value 2" )
 
 -- Results:
 
