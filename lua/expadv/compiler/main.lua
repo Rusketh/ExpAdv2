@@ -176,6 +176,20 @@ end
 	@: Instruction based functions:
    --- */
 
+function Compiler:FixPlaceHolders( Instruction )
+	Instruction = table.Copy( Instruction )
+
+	if Instruction.FLAG == EXPADV_PREPARE or Instruction.FLAG == EXPADV_INLINEPREPARE then
+		Instruction.Prepare = string.gsub( Instruction.Prepare, "@modulus", "%%" )
+	end
+
+	if Instruction.FLAG == EXPADV_INLINE or Instruction.FLAG == EXPADV_INLINEPREPARE then
+		Instruction.Inline = string.gsub( Instruction.Inline, "@modulus", "%%" )
+	end
+
+	return Instruction
+end
+
 function Compiler:NewLuaInstruction( Trace, Operator, Prepare, Inline )
 	local Flag = EXPADV_INLINEPREPARE
 
@@ -201,7 +215,9 @@ function Compiler:MakeVirtual( Instruction, Force )
 
 	local ID = #self.VMInstructions + 1
 	
-	local Native = table.concat( { -- Todo, Add Env
+	local Instruction = self:FixPlaceHolders( Instruction )
+
+	local Native = table.concat( {
 		"return function( Context )",
 			"setfenv( 1, Context.Enviroment )",
 			Instruction.Prepare or "",
@@ -699,7 +715,7 @@ local function SoftCompile( self, Script, Files, OnError, OnSucess )
 
 		if !Compiled then return OnError( Instruction ) end
 
-		return OnSucess( self, Instruction )
+		return OnSucess( self, self:FixPlaceHolders( Instruction ) )
 end
 
 EXPADV.SoftCompile = SoftCompile

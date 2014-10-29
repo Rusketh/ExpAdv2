@@ -1104,7 +1104,7 @@ function EXPADV.GenerateOperatorDescription( Operator )
 
 			elseif Name == "&&" then
 				Operator.Description = "Logic AND" 
-				Operator.Example = string.format( "%s && %s", A, B )
+				Operator.Example = string.format( "%s &&&& %s", A, B )
 				Operator.Type = "logic"
 
 			elseif Name == "||" then

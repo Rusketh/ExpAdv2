@@ -47,7 +47,7 @@ Component:AddInlineOperator( "+", "n,n", "n", "(@value 1 + @value 2)" )
 Component:AddInlineOperator( "-", "n,n", "n", "(@value 1 - @value 2)" )
 Component:AddInlineOperator( "*", "n,n", "n", "(@value 1 * @value 2)" )
 Component:AddInlineOperator( "/", "n,n", "n", "(@value 1 / @value 2)" )
-Component:AddInlineOperator( "%", "n,n", "n", "(@value 1 %% @value 2)" )
+Component:AddInlineOperator( "%", "n,n", "n", "(@value 1 @modulus @value 2)" )
 Component:AddInlineOperator( "^", "n,n", "n", "(@value 1 ^ @value 2)" )
  
 /* --- --------------------------------------------------------------------------------
@@ -202,7 +202,7 @@ Component:AddInlineFunction( "abs", "n", "n", "((@value 1 >= 0) and @value 1 or 
 Component:AddFunctionHelper( "abs", "n", "returns the absolute value of the specified number." )
 
 
-Component:AddInlineFunction( "ceil", "n", "n", "(@value 1 - @value 1 % -1)" ) ;
+Component:AddInlineFunction( "ceil", "n", "n", "(@value 1 - @value 1 @modulus -1)" ) ;
 Component:AddFunctionHelper( "ceil", "n", "Rounds (number) to the nearest integer. (Upper) " )
 
 
@@ -212,7 +212,7 @@ Component:AddPreparedFunction( "ceil", "n,n", "", [[
 Component:AddFunctionHelper( "ceil", "n,n", "Rounds (number) to the nearest integer. (Upper)" )
 
 
-Component:AddInlineFunction( "round", "n", "n", "(@value 1 - (@value 1 + 0.5) % 1 + 0.5)" )
+Component:AddInlineFunction( "round", "n", "n", "(@value 1 - (@value 1 + 0.5) @modulus 1 + 0.5)" )
 Component:AddFunctionHelper( "round", "n", "Rounds the specified number." )
 
 Component:AddPreparedFunction( "round", "n,n", "", [[
@@ -221,11 +221,11 @@ Component:AddPreparedFunction( "round", "n,n", "", [[
 Component:AddFunctionHelper( "round", "n,n", "Rounds the specified number." )
 
 
-Component:AddInlineFunction( "int", "n", "n", "((@value 1 >= 0) and @value 1 - @value 1 % 1 or @value 1 - @value 1 % -1)" )
+Component:AddInlineFunction( "int", "n", "n", "((@value 1 >= 0) and @value 1 - @value 1 @modulus 1 or @value 1 - @value 1 @modulus -1)" )
 Component:AddFunctionHelper( "int", "n", "Returns (number) to the left of the decimal." )
 
 
-Component:AddInlineFunction( "frac", "n", "n", "(@value 1 >= 0 and @value 1 % 1 or @value 1 % -1)" )
+Component:AddInlineFunction( "frac", "n", "n", "(@value 1 >= 0 and @value 1 @modulus 1 or @value 1 @modulus -1)" )
 Component:AddFunctionHelper( "frac", "n", "Returns (number) to the right of the decimal." )
 
 Component:AddInlineFunction( "clamp", "n,n,n", "n", "math.Clamp( @value 1, @value 2, @value 3 )" )
@@ -234,10 +234,6 @@ Component:AddFunctionHelper( "clamp", "n,n,n", "Clamps (number) between min and 
 
 Component:AddInlineFunction( "inrange", "n,n,n", "n", "((@value 1 < @value 2 or @value 1 > @value 3) and 0 or 1)" )
 Component:AddFunctionHelper( "inrange", "n,n,n", "Returns if (number) is between min and max" )
-
-Component:AddInlineFunction( "sign", "n", "n", "(@value 1 > %Round and 1 or (@value 1 < -%Round and -1 or 0))" )
-Component:AddFunctionHelper( "sign", "n", "Returns the sign of (number)." )
-
 
 /*==============================================================================================
 Section: Random Numbers
