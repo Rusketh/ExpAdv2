@@ -748,3 +748,19 @@ end]], "(@val or false)" )
 Component:AddFunctionHelper( "blockPlayer", "h:e", "Blocks a player from seeing the hologram." )
 Component:AddFunctionHelper( "unblockPlayer", "h:e", "Unblocks a player from seeing the hologram, allow them to see it again." )
 Component:AddFunctionHelper( "isBlocked", "h:e", "Returns true is a player is blocked from seeing the hologram." )
+
+/*==============================================================================================
+    Section: Bounding box functions.
+==============================================================================================*/
+
+Component:AddInlineFunction( "boxCenter", "h:", "v", "(@value 1:IsValid() and @value 1:OBBCenter() or Vector(0,0,0))")
+Component:AddFunctionHelper( "boxCenter", "h:", "Gets the collision bounding size for the given hologram.")
+
+Component:AddInlineFunction( "boxSize", "h:", "v", "(@value 1:IsValid() and (@value 1:OBBMaxs() - @value 1:OBBMins()) or Vector(0,0,0))")
+Component:AddFunctionHelper( "boxSize", "h:", "Gets the collision bounding size for the given hologram.")
+
+Component:AddInlineFunction( "boxMax", "h:", "v", "(@value 1:IsValid() and @value 1:OBBMaxs() or Vector(0,0,0))")
+Component:AddFunctionHelper( "boxMax", "h:", "Gets the collision bounding max size for the given hologram.")
+
+Component:AddInlineFunction( "boxMin", "h:", "v", "(@value 1:IsValid() and @value 1:OBBMins() or Vector(0,0,0))")
+Component:AddFunctionHelper( "boxMin", "h:", "Gets the collision bounding min size for the given hologram.")
