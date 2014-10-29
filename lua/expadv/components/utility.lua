@@ -639,7 +639,7 @@ end]] )
 
 PropComponent:AddPreparedFunction( "freeze", "e:b", "", [[
 if IsValid( @value 1 ) and EXPADV.PPCheck( Context.player, @value 1 ) then
-	local @define Phys = @value 1:GetPhysicsObject()
+	@define Phys = @value 1:GetPhysicsObject()
 	@define Phys:EnableMotion( !@value 2 )
 	@define Phys:Wake( )
 end]], "" )
@@ -657,7 +657,7 @@ end]] )
 
 PropComponent:AddPreparedFunction("enableGravity", "e:b", "", [[
 if IsValid( @value 1 ) and EXPADV.PPCheck( Context.player, @value 1 ) then
-	local @define Phys = @value 1:GetPhysicsObject()
+	@define Phys = @value 1:GetPhysicsObject()
 	@define Phys:EnableGravity( @value 2 )
 	@define Phys:Wake( )
 
