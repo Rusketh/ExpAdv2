@@ -1,17 +1,20 @@
+--[[
+	Credits goes to the original authors Fervidusletum and Bubbus.
+	Based on their work @ https://github.com/nrlulz/ACF/blob/master/lua/entities/gmod_wire_expression2/core/custom/acffunctions.lua
+--]]
+
 if !WireLib then -- Make sure wiremod is installed.
-	error("No WireLib not detected when installing EA2 ACF component, not installing!")
+	error("Wiremod not detected when installing EA2 ACF component, not installing!")
 	return
 elseif !ACF then -- Also make sure ACF is actually installed.
-	error("ACF not detected when installing EA2 ACF component, not installing!")
+	error("Armored Combat Framework not detected when installing EA2 ACF component, not installing!")
 	return
 end
 
 local Component = EXPADV.AddComponent( "acf", true )
 
 Component.Author = "FreeFry"
-Component.Description = "Adds some functions for controlling ACF stuff. This is a direct conversion from the E2 extension part of ACF."
-
--- [ Helper Functions ] --
+Component.Description = "Adds functions for controlling ACF sents."
 
 local function isEngine(ent)
 	if not validPhysics(ent) then return false end
@@ -93,7 +96,7 @@ end
 
 EXPADV.ServerOperators()
 
-Component:AddInlineFunction( "acfInfoRestricted", "", "$GetConVar('sbox_acf_e2restrictinfo'):GetBool()" )
+Component:AddInlineFunction( "acfInfoRestricted", "", "b" , "$GetConVar('sbox_acf_e2restrictinfo'):GetBool()" )
 Component:AddFunctionHelper( "acfInfoRestricted", "", "Returns true if functions returning sensitive info are restricted to owned props." )
 
 Component:AddVMFunction( "acfNameShort", "e:", "s", function( Context, Trace, Target )
