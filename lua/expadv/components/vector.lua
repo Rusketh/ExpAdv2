@@ -13,7 +13,7 @@ Component.Description = "Adds a 3d and a 2d vector object."
 
 local VectorObj = Component:AddClass( "vector", "v" )
 
-VectorObj:StringBuilder( function( Vector ) return string.format( "Vec( %i, %i, %i )", Vector.x, Vector.y, Vector.z ) end )
+VectorObj:StringBuilder( function( Vector ) return string.format( "Vec( %f, %f, %f )", Vector.x, Vector.y, Vector.z ) end )
 VectorObj:DefaultAsLua( Vector(0, 0, 0) )
 
 /* --- --------------------------------------------------------------------------------
