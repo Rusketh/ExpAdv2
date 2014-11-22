@@ -45,6 +45,7 @@ AddCSLuaFile( "expadv/editor/ea_toolbar.lua" )
 AddCSLuaFile( "expadv/editor/syntaxer.lua" )
 AddCSLuaFile( "expadv/editor/pastebin.lua" )
 AddCSLuaFile( "expadv/editor/ea_search.lua" )
+AddCSLuaFile( "expadv/editor/ea_codecompletion.lua" )
 
 AddCSLuaFile( "expadv/editor.lua" )
 AddCSLuaFile( "expadv/editor/shared.lua" )

@@ -702,8 +702,13 @@ function PANEL:_OnKeyCodeTyped( code )
 			self.Scroll = old_scroll
 			self:ScrollCaret( )
 		elseif code == KEY_SPACE then 
-			self:GetParent( ):GetParent( ):DoValidate( true )
-		
+			if self.CodeCompletion == nil or !self.CodeCompletion:IsVisible() then
+				self:ShowCodeCompletionWindow()
+				self.CodeCompletion.Active = true
+				self.CodeCompletion.Selected = 1
+			else
+				self:CloseCodeCompletionWindow()
+			end
 		elseif code == KEY_F2 then
 			local Start, End = self:MakeSelection( self:Selection( ) ) 
 			self.Bookmarks[Start.x]:DoClick( )
@@ -717,7 +722,9 @@ function PANEL:_OnKeyCodeTyped( code )
 			local Line = self.Rows[self.Caret.x] 
 			local Count = string_len( string_match( string_sub( Line, 1, self.Caret.y - 1 ), "^%s*" ) ) 
 			
-			if string_match( "{" .. Line .. "}", "^%b{}.*$" ) then 
+			if self.CodeCompletion != nil and self.CodeCompletion:IsVisible() and self.CodeCompletion.Active then
+				self.CodeCompletion:Apply()
+			elseif string_match( "{" .. Line .. "}", "^%b{}.*$" ) then 
 				if string_match( string_sub( Line, 1, self.Caret.y - 1 ), "{$" ) and string_match( string_sub( Line, self.Caret.y, -1 ), "^}" ) then 
 					local Caret = self:SetArea( self:Selection( ), "\n" .. string_rep( "    ", math_floor( Count / 4 ) + 1 )  .. "\n" .. string_rep( "    ", math_floor( Count / 4 ) ) )  
 					
@@ -740,7 +747,9 @@ function PANEL:_OnKeyCodeTyped( code )
 		elseif code == KEY_INSERT then 
 			self.Insert = !self.Insert
 		elseif code == KEY_UP then
-			if self.Caret.x > 1 then
+			if self.CodeCompletion != nil and self.CodeCompletion:IsVisible() and self.CodeCompletion.Active then
+				self.CodeCompletion:Scroll(-1)
+			elseif self.Caret.x > 1 then
 				self.Caret.x = self.Caret.x - 1
 				
 				local length = #( self.Rows[self.Caret.x] )
@@ -754,7 +763,9 @@ function PANEL:_OnKeyCodeTyped( code )
 				self.Start = self:CopyPosition( self.Caret )
 			end
 		elseif code == KEY_DOWN then
-			if self.Caret.x < #self.Rows then
+			if self.CodeCompletion != nil and self.CodeCompletion:IsVisible() and self.CodeCompletion.Active then
+				self.CodeCompletion:Scroll(1)
+			elseif self.Caret.x < #self.Rows then
 				self.Caret.x = self.Caret.x + 1
 				
 				local length = #( self.Rows[self.Caret.x] )
@@ -792,6 +803,9 @@ function PANEL:_OnKeyCodeTyped( code )
 				else 
 					self:SetCaret( self:SetArea( { self.Caret, self:MovePosition( self.Caret, -1 ) }, "" ) )
 				end
+			end
+			if self.CodeCompletion != nil and self.CodeCompletion:IsVisible() then
+				self.CodeCompletion:Update()
 			end
 		elseif code == KEY_DELETE then
 			if self:HasSelection( ) then
@@ -863,6 +877,15 @@ function PANEL:_OnKeyCodeTyped( code )
 	end
 	
 	if code == KEY_TAB or ( control and ( code == KEY_I or code == KEY_O ) ) then 
+		if self.CodeCompletion != nil and self.CodeCompletion:IsVisible() then
+			if !self.CodeCompletion.Active then
+				self.CodeCompletion.Active = true
+				self.CodeCompletion.Selected = 1
+			else
+				self.CodeCompletion:Scroll((control and -1 or 1))
+			end
+			return
+		end
 		if code == KEY_O then shift = not shift end 
 		if code == KEY_TAB and control then shift = not shift end 
 		if self:HasSelection( ) then 
@@ -908,6 +931,10 @@ function PANEL:_OnKeyCodeTyped( code )
 	end
 	
 	if control and self.OnShortcut then self:OnShortcut( code ) end 
+	
+	if self.CodeCompletion != nil and self.CodeCompletion:IsVisible() then
+		self.CodeCompletion:Update()
+	end
 end
 
 local SpecialKeys = { }
@@ -977,7 +1004,12 @@ function PANEL:_OnTextChanged( )
 	else
 		self:SetSelection( text )
 	end 
-	self:ScrollCaret( ) 
+	if self.CodeCompletion == nil or !self.CodeCompletion:IsVisible() then
+		self:ShowCodeCompletionWindow()
+	else 
+		self.CodeCompletion:Update()
+	end
+	self:ScrollCaret( )
 end
 
 /*---------------------------------------------------------------------------
@@ -988,6 +1020,9 @@ function PANEL:OnMousePressed( code )
 	if self.MouseDown then return end 
 	
 	if code == MOUSE_LEFT then 
+		if self.CodeCompletion != nil and self.CodeCompletion:IsVisible() then
+			self.CodeCompletion:SetVisible(false)
+		end
 		local cursor = self:CursorToCaret( ) 
 		if self.LastClick and CurTime( ) - self.LastClick < 0.6 and ( self.Caret == cursor or self.LastCursor == cursor ) then 
 			if self.temp then 
@@ -1633,5 +1668,27 @@ function PANEL:PerformLayout( )
 	
 	self.Search:SetPos( self:GetWide( ) - self.ScrollBar:GetWide( ) - 285, self.Search.Y )
 end
+
+/*---------------------------------------------------------------------------
+	Code Completion
+---------------------------------------------------------------------------*/
+
+PANEL.CodeCompletion = nil
+
+function PANEL:ShowCodeCompletionWindow( )
+	if !(GetConVar("expadv_editor_codecompletion") and GetConVar("expadv_editor_codecompletion"):GetBool()) then return end
+	if self.CodeCompletion == nil then self.CodeCompletion = vgui.Create( "EA_CodeCompletion", self ) end
+	self.CodeCompletion:Show( )
+	self.CodeCompletion:Init( )
+	self.CodeCompletion:SetPos( ( self.Caret.y - self.Scroll.y ) * self.FontWidth + self.BookmarkWidth + self.LineNumberWidth + self.FoldingWidth, ( self.Caret.x - self.Scroll.x + 1 ) * self.FontHeight)
+end
+
+function PANEL:CloseCodeCompletionWindow( )
+	if self.CodeCompletion != nil then
+		self.CodeCompletion:SetVisible(false)
+	end
+end
+
+CreateClientConVar( "expadv_editor_codecompletion", 1, true )
 
 vgui.Register( "EA_Editor", PANEL, "EditablePanel" ) 

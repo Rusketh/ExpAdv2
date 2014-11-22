@@ -322,13 +322,20 @@ local function CreateOptions( )
 	
 	local Cvars = Panel:Add( "DHorizontalScroller" )
 	Cvars:Dock( TOP ) 
-	Cvars:DockMargin( 10, 5, 10, 5 )
+	Cvars:DockMargin( 10, 5, 10, 0 )
 	Cvars:AddPanel( kinect )
 	Cvars:AddPanel( Talk )
 	--Cvars:AddPanel( Console )
 	--Cvars:AddPanel( KeyEvents )
+
+	local CC = Panel:Add( "DCheckBoxLabel" ) 
+	CC:SetText( "Enable code completion " ) 
+	CC:SetConVar( "expadv_editor_codecompletion" )
+	CC:Dock( TOP ) 
+	CC:DockMargin( 10, 0, 10, 5 )
+	CC:SizeToContents( )
 	
-	Panel:SetSize( 300, 285 ) 
+	Panel:SetSize( 300, 315 ) 
 	Panel:SetPos( cookie.GetNumber( "eaoptions_x", ScrW( ) / 2 - Panel:GetWide( ) / 2 ), cookie.GetNumber( "eaoptions_y", ScrH( ) / 2 - Panel:GetTall( ) / 2 ) ) 
 	
 	return Panel 
