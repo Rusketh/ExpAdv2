@@ -1,5 +1,6 @@
 /* --- --------------------------------------------------------------------------------
 	@: Compiler NameSpace:
+	Damianu and Name dont like this.
    --- */
 
 EXPADV.Compiler = { }
