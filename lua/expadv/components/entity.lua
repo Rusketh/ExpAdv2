@@ -429,7 +429,7 @@ Component:AddPreparedFunction( "npcGetRelationship", "e:e", "s",
 	return ""
 end]])
 
-Component:AddFunctionHelper( "npcGetRelationship", "e:e", "Gets the npc's relationship with another npc as a string.")
+Component:AddFunctionHelper( "npcGetRelationship", "e:e", "Gets the npc's relationship with another entity as a string.")
    
 /* --- --------------------------------------------------------------------------------
 	@: Physics Geters
