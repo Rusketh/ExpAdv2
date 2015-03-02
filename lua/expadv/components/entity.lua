@@ -346,6 +346,91 @@ Component:AddVMFunction( "allowCrosshair", "b", "",
 
 Component:AddFunctionHelper( "allowCrosshair", "b", "Activates the crosshair for driver of the Vehicle linked to the gate (by the expadv2 tool).")
 
+
+/* --- --------------------------------------------------------------------------------
+	@: NPC Control
+   --- */
+EXPADV.ServerOperators()
+
+Component:AddPreparedFunction( "npcGoWalk", "e:v", "", 
+[[if(@value 1:IsValid() && EXPADV.PPCheck(Context,@value 1) && @value 1:IsNPC() then
+	@value 1:SetLastPosition( @value 2 )
+	@value 1:SetSchedule( SCHED_FORCED_GO )
+end]])
+
+Component:AddFunctionHelper( "npcGoWalk", "e:v", "Tells an npc to walk to a position")
+
+Component:AddPreparedFunction( "npcGoRun", "e:v", "", 
+[[if(@value 1:IsValid() && EXPADV.PPCheck(Context,@value 1) && @value 1:IsNPC() then
+	@value 1:SetLastPosition( @value 2 )
+	@value 1:SetSchedule( SCHED_FORCED_GO_RUN )
+end]])
+
+Component:AddFunctionHelper( "npcGoRun", "e:v", "Tells an npc to run to a position")
+
+Component:AddPreparedFunction( "npcAttackMelee", "e:", "", 
+[[if(@value 1:IsValid() && EXPADV.PPCheck(Context,@value 1) && @value 1:IsNPC() then
+	@value 1:SetSchedule( SCHED_MELEE_ATTACK1 )
+end]])
+
+Component:AddFunctionHelper( "npcAttackMelee", "e:", "Tells an npc to run to start attacking with melee")
+
+Component:AddPreparedFunction( "npcAttackRange", "e:", "", 
+[[if(@value 1:IsValid() && EXPADV.PPCheck(Context,@value 1) && @value 1:IsNPC() then
+	@value 1:SetSchedule( SCHED_RANGE_ATTACK1 )
+end]])
+
+Component:AddFunctionHelper( "npcAttackRange", "e:", "Tells an npc to run to start attacking from a range")
+
+Component:AddPreparedFunction( "npcStop", "e:", "", 
+[[if(@value 1:IsValid() && EXPADV.PPCheck(Context,@value 1) && @value 1:IsNPC() then
+	@value 1:SetSchedule( SCHED_NONE )
+end]])
+
+Component:AddFunctionHelper( "npcStop", "e:", "Tells an npc to run to stop what it's doing")
+
+Component:AddPreparedFunction( "npcSetTarget", "e:e", "", 
+[[if(@value 1:IsValid() && @value 2:IsValid() && EXPADV.PPCheck(Context,@value 1) && @value 1:IsNPC() then
+	@value 1:SetEnemy(@value 2)
+end]])
+
+Component:AddFunctionHelper( "npcSetTarget", "e:e", "Sets the npc's target")
+
+Component:AddPreparedFunction( "npcGetTarget", "e:", "e", 
+[[if(@value 1:IsValid() && EXPADV.PPCheck(Context,@value 1) && @value 1:IsNPC() then
+	return @value 1:GetEnemy()
+end]])
+
+Component:AddFunctionHelper( "npcGetTarget", "e:", "Returns the npc's target")
+
+EXPADV.NpcRelationships = {hate = 1, fear = 2, like = 3, neutral = 4, [1] = "hate", [2] = "fear", [3] = "like", [4] = "neutral"}
+EXPADV.NpcRelationshipsStr = {hate = "D_HT", fear = "D_FR", like = "D_LI", neutral = "D_NU"}
+
+Component:AddPreparedFunction( "npcSetRelationship", "e:e,s,n", "", 
+[[if(@value 1:IsValid() && @value 2:IsValid() && EXPADV.PPCheck(Context,@value 1) && @value 1:IsNPC() && EXPADV.NpcRelationships[@value 3] then
+	@value 1:AddEntityRelationship(@value 2, EXPADV.NpcRelationships[@value 3], @value 4)
+end]])
+
+Component:AddFunctionHelper( "npcSetRelationship", "e:e,s,n", "Sets the npc's relationship. hate, fear, like, or neutral, then the priority value.")
+
+Component:AddPreparedFunction( "npcSetRelationship", "e:s,s,n", "", 
+[[if(@value 1:IsValid() && EXPADV.PPCheck(Context,@value 1) && @value 1:IsNPC() && EXPADV.NpcRelationshipsStr[@value 3] then
+	@value 1:AddRelationship(@value 2 .. " " .. EXPADV.NpcRelationshipsStr[@value 3] .. " " .. @value 4)
+end]])
+
+Component:AddFunctionHelper( "npcSetRelationship", "e:s,s,n", "Sets the npc's relationship to a general class group. hate, fear, like, or neutral, then the priority value.")
+
+Component:AddPreparedFunction( "npcGetRelationship", "e:e", "s", 
+[[if(@value 1:IsValid() && EXPADV.PPCheck(Context,@value 1) && @value 1:IsNPC() && @value 2:IsValid() then
+	local disp = EXPADV.NpcRelationships[@value 1:Disposition(@value 2)]
+	if disp then
+		return disp
+	end
+	return ""
+end]])
+
+Component:AddFunctionHelper( "npcGetRelationship", "e:e", "Gets the npc's relationship with another npc as a string.")
+   
 /* --- --------------------------------------------------------------------------------
 	@: Physics Geters
    --- */
