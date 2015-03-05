@@ -266,6 +266,7 @@ function EXPADV.LoadOperators( )
 		end --TODO: add user descriptions!
 	end
 
+	Temp_Operators = nil
 	EXPADV.CallHook( "PostLoadOperators" )
 end
 
@@ -749,6 +750,44 @@ function EXPADV.BuildLuaOperator( Operator )
 		end; return
 	end
 
+	-- Build a compilation table for the operator
+	
+	local function InterpretToken(Input, BuildTable, I) --Returns the length
+		if Input[I] == "@" then
+		
+		elseif Input[I] == "$" then
+			
+		end
+	end
+	
+	local function Interpret(Input)
+	
+		local BuildTable = {}
+		BuildTable.Codes = {}
+		BuildTable.Values = {}
+		BuildTable.Imports = {}
+	
+		local I = 1
+		while I <= #Input do
+			local begin = string.find(Input, "[%$@]", I)
+			if begin then
+				local len = begin - I
+				if len > 0 then
+					BuildTable[#BuildTable + 1] = string_sub(Input, I, Input - 1)
+				end
+				
+				I = I + InterpretToken(Input, BuildTable, begin)		
+			else
+				BuildTable[#BuildTable + 1] = string_sub(Input, I)
+			end
+		end
+		
+		return BuildTable
+	end
+	
+	Operator.PrepareTable = Interpret(Operator.Prepare)
+	Operator.InlineTable = Interpret(Operator.Inline)
+	
 	Operator.Compile = function( Compiler, _Trace, ... )
 		EXPADV.CanBuildOperator( Compiler, _Trace, Operator )
 
