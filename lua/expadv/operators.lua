@@ -773,7 +773,7 @@ function EXPADV.BuildLuaOperator( Operator )
 			if begin then
 				local len = begin - I
 				if len > 0 then
-					BuildTable[#BuildTable + 1] = string_sub(Input, I, Input - 1)
+					BuildTable[#BuildTable + 1] = string_sub(Input, I, begin - 1)
 				end
 				
 				I = I + InterpretToken(Input, BuildTable, begin)		
