@@ -600,42 +600,6 @@ function EXPADV.CanBuildOperator( Compiler, Trace, Operator )
 		Compiler:TraceError( Trace, "%s Must not appear in clientside scripts.", Operator.Signature )
 	end
 end
-
-/* --- --------------------------------------------------------------------------------
-	@: 
-   --- */
-
-function EXPADV.Interprit( Operator, Compiler, Line )
-	if Operator.Component then
-		local Settings = { }
-
-		for StartPos, EndPos in string_gmatch( Line, "()@setting [a-zA-Z_0-9]+()" ) do
-			Settings[ #Settings + 1 ] = { StartPos, EndPos }
-		end
-
-		for I = #Settings, 1, -1 do
-			local Start, End = unpack( Settings[I] )
-			local Setting = Operator.Component:ReadSetting( string_sub( Line, Start + 9, End - 1 ), nil )
-			Line = string_sub( Line, 1, Start - 1 ) .. EXPADV.ToLua(Setting) .. string_sub( Line, End )
-		end
-	end
-	
-	local Imports = { }
-
-	for StartPos, EndPos in string_gmatch( Line, "()%$[a-zA-Z0-9_]+()" ) do
-		Imports[ #Imports + 1 ] = { StartPos, EndPos }
-	end
-
-	for I = #Imports, 1, -1 do
-		local Start, End = unpack( Imports[I] )
-		local Variable = string_sub( Line, Start + 1, End - 1 )
-
-		Line = string_sub( Line, 1, Start - 1 ) .. Variable .. string_sub( Line, End )
-		Compiler.Enviroment[Variable] = _G[Variable]
-	end
-
-	return Line
-end
    
 /* --- --------------------------------------------------------------------------------
 	@: Operator to Lua
@@ -752,12 +716,85 @@ function EXPADV.BuildLuaOperator( Operator )
 
 	-- Build a compilation table for the operator
 	
-	local function InterpretToken(Input, BuildTable, I) --Returns the length
+	local TokenPrepareFuncs = {
+		define = function(Input, BuildTable, I)
+		
+		end,
+		
+		setting = function(Input, BuildTable, I)
+			local StartPos, EndPos = string_find( Input, "[%w_]+", I)
+			
+			if StartPos then
+				BuildTable[ #BuildTable + 1 ] = {name = setting, Setting = string_sub(Input, StartPos, EndPos)}
+				return EndPos + 1
+			end
+			
+			return I + 1
+		end,
+		
+		value = function(Input, BuildTable, I)
+		
+		end,
+		type = function(Input, BuildTable, I)
+		
+		end,
+		prepare = function(Input, BuildTable, I)
+		
+		end,
+		trace = function(Input, BuildTable, I)
+		
+		end,
+		["..."] = function(Input, BuildTable, I)
+		
+		end
+	}
+	local TokenCompileFuncs = {
+		define = function(Input, BuildTable, I)
+		
+		end,
+		setting = function(Data)
+			local Setting = Operator.Component:ReadSetting( Data.Setting, nil )
+			return EXPADV.ToLua(Setting)
+		end,
+		value = function(Input, BuildTable, I)
+		
+		end,
+		type = function(Input, BuildTable, I)
+		
+		end,
+		prepare = function(Input, BuildTable, I)
+		
+		end,
+		trace = function(Input, BuildTable, I)
+		
+		end,
+		["..."] = function(Input, BuildTable, I)
+		
+		end
+	}
+	
+	local function InterpretToken(Input, BuildTable, I) --Returns position
 		if Input[I] == "@" then
+			for token, func in pairs(TokenPrepareFuncs) do
+				local EndPos = I + #token + 1
+				if string_sub(Input, I, EndPos) == token then
+					return func(Input, BuildTable, EndPos + 1)
+				end
+			end
+			print("@ symbol with an invalid token!")
 		
 		elseif Input[I] == "$" then
+			local StartPos, EndPos = string_find(Input, "[_%w]+", I + 1)
+			
+			if StartPos then
+				BuildTable.Imports[#BuildTable.Imports + 1] = string_sub(Input, StartPos, EndPos)
+				return EndPos + 1
+			end
+			print("$ symbol without a following import name!")
 			
 		end
+		
+		return I + 1 --Nothing valid was found so just return the next position
 	end
 	
 	local function Interpret(Input)
@@ -766,17 +803,18 @@ function EXPADV.BuildLuaOperator( Operator )
 		BuildTable.Codes = {}
 		BuildTable.Values = {}
 		BuildTable.Imports = {}
+		BuildTable.Defines = {}
 	
 		local I = 1
 		while I <= #Input do
-			local begin = string.find(Input, "[%$@]", I)
+			local begin = string_find(Input, "[%$@]", I)
 			if begin then
 				local len = begin - I
 				if len > 0 then
 					BuildTable[#BuildTable + 1] = string_sub(Input, I, begin - 1)
 				end
 				
-				I = I + InterpretToken(Input, BuildTable, begin)		
+				I = InterpretToken(Input, BuildTable, begin)		
 			else
 				BuildTable[#BuildTable + 1] = string_sub(Input, I)
 			end
