@@ -123,7 +123,7 @@ function Compiler:CompileTrace( Trace )
 		self.Traces[ID] = table.Copy(Trace) -- TODO: Fix this :D
 	end
 
-	return string.format("Context.Traces[%s]", ID)
+	return "Context.Traces[" .. ID .. "]"
 end
 
 /* --- --------------------------------------------------------------------------------
@@ -139,7 +139,7 @@ function Compiler:Error( Offset, Message, A, ... )
 	end
 	
 	if A then Message = Format( Message, A, ... ) end
-	error( Format( "%s at line %i, char %i", Message, self.ReadLine, self.ReadChar + Offset ), 0 )
+	error( Message .. " at line " .. self.ReadLine .. ", char " .. ( self.ReadChar + Offset ), 0 )
 end
 
 function Compiler:TraceError( Trace, ... )
@@ -242,7 +242,7 @@ function Compiler:MakeVirtual( Instruction, Force )
 	self.VMInstructions[ID] = Compiled( )
 	self.NativeLog[ "Instructions " .. ID ] = Natvie
 
-	local Instr = self:NewLuaInstruction( Trace, Instruction, nil, string.format( "Context.Instructions[%i]( Context )", ID ) )
+	local Instr = self:NewLuaInstruction( Trace, Instruction, nil,  "Context.Instructions[" .. ID .. "]( Context )" )
 
 	Instr.IsRaw = true
 
@@ -356,7 +356,7 @@ end
    end
 
    //function Compiler:FlushMemory( Trace, Memory )
-	//	return string.format( "local Context = Context:Push( %s, %s )", EXPADV.ToLua( Trace ), EXPADV.ToLua( Memory or { } ) )
+	//	return "local Context = Context:Push( " .. EXPADV.ToLua( Trace ) .. ", " .. EXPADV.ToLua( Memory or { } ) .. " )"
    //end
 
    function Compiler:PushReturnDeph( ForceClass, Optional )
@@ -620,7 +620,7 @@ function Compiler:LookUpOperator( Name, First, ... )
 		return EXPADV.Operators[Name .. "()"]
 	end
 
-	local Op = EXPADV.Operators[ string.format( "%s(%s)", Name, table.concat( { First, ... }, "" ) ) ]
+	local Op = EXPADV.Operators[ Name .. "(" .. table.concat( { First, ... }, "" ) .. ")" ]
 
 	if Op then return Op end
 
@@ -640,7 +640,7 @@ function Compiler:LookUpClassOperator( Short, Name, First, Second, ... )
 		if !First then
 			Op = Operators[Name .. "()"]
 		else
-			Op = Operators[ string.format( "%s(%s)", Name, table.concat( { First, Second, ... }, "" ) ) ]
+			Op = Operators[ Name .. "(" .. table.concat( { First, Second, ... }, "" ) .. ")" ]
 		end
 
 		if Op then return Op end

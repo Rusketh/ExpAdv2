@@ -28,7 +28,7 @@ end
 
 function Compiler:Compile_POINT_CLASS( Trace, ClassName )
 	local Class = self:GetClass( Trace, ClassName, false ) --Not to be used as an actual operator or object.
-	return { Trace = Trace, Inline = string.format("%q",Class.Short), Return = "_cls", FLAG = EXPADV_INLINE, PointClass = Class.Short, IsRaw = true }
+	return { Trace = Trace, Inline = "\"" .. Class.Short .. "\"", Return = "_cls", FLAG = EXPADV_INLINE, PointClass = Class.Short, IsRaw = true }
 end
 
 /* --- ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -219,7 +219,7 @@ end
 function Compiler:Compile_MEQ( Trace, Expression, Expressions )
 	local Definition = self:DefineVariable( )
 
-	local Prepare = string.format( "%s\n%s = %s", Expression.Prepare or "", Definition, Expression.Inline )
+	local Prepare = ( Expression.Prepare or "" ) .. "\n" .. Definition .. " = " .. Expression.Inline
 
 	local Expression = Quick( Definition, Expression.Return )
 
@@ -239,7 +239,7 @@ end
 function Compiler:Compile_MNEQ( Trace, Expression, Expressions )
 	local Definition = self:DefineVariable( )
 
-	local Prepare = string.format( "%s\n%s = %s", Expression.Prepare or "", Definition, Expression.Inline )
+	local Prepare = ( Expression.Prepare or "" ) .. "\n" .. Definition .. " = " .. Expression.Inline
 
 	local Expression = Quick( Definition, Expression.Return )
 
@@ -315,7 +315,8 @@ function Compiler:Compile_TEN( Trace, Expression1, Expression2, Expression3 )
 
 	Expression1 = self:Compile_IS( Trace, Expression1 )
 
-	local Inline, Prepare = string.format( "(%s and %s or %s)", Expression1.Inline, Expression2.Inline, Expression3.Inline )
+	local Inline = "(" .. Expression1.Inline .. " and " .. Expression2.Inline .. " or " .. Expression3.Inline .. ")"
+	local Prepare
 	
 	if Expression1.Prepare or Expression2.Prepare or Expression3.Prepare then
 		Prepare = table.concat( { Expression1.Prepare or "", Expression2.Prepare or "", Expression3.Prepare or "" }, "\n" )
@@ -382,10 +383,10 @@ function Compiler:Compile_VAR( Trace, Variable )
 	local Class,ArryClass = Cell.Return, Cell.ArryClass
 
 	if Cell.Modifier == "class" then
-		return { Trace = Trace, Inline = string.format( "THIS.Memory[%i]", MemRef ), Return = Class, ArryClass = ArryClass, FLAG = EXPADV_INLINE, IsRaw = true, Variable = Variable, Scope = MemScope, MemRef = MemRef }
+		return { Trace = Trace, Inline = "THIS.Memory[" .. MemRef .. "]", Return = Class, ArryClass = ArryClass, FLAG = EXPADV_INLINE, IsRaw = true, Variable = Variable, Scope = MemScope, MemRef = MemRef }
 	end
 	
-	return { Trace = Trace, Inline = string.format( "Context.Memory[%i]", MemRef ), Return = Class, ArryClass = ArryClass, FLAG = EXPADV_INLINE, IsRaw = true, Variable = Variable, Scope = MemScope, MemRef = MemRef }
+	return { Trace = Trace, Inline = "Context.Memory[" .. MemRef .. "]", Return = Class, ArryClass = ArryClass, FLAG = EXPADV_INLINE, IsRaw = true, Variable = Variable, Scope = MemScope, MemRef = MemRef }
 end
 
 function Compiler:Compile_DELTA( Trace, Variable )
@@ -666,7 +667,7 @@ function Compiler:Compile_ASS( Trace, Variable, Expression, DefinedClass, Modifi
 	if Modifier == "input" or (DefinedClass and Modifier == "static") then
 		self:PrepareInline( Inst )
 
-		Inst.Prepare = string.format( "if Context.Memory[%i] == nil then\n%s\nend", MemRef, Inst.Prepare )
+		Inst.Prepare = "if Context.Memory[" .. MemRef .. "] == nil then\n" .. Inst.Prepare .. "\nend"
 	end
 
 	return Inst
@@ -725,7 +726,7 @@ function Compiler:Compile_FUNC( Trace, Variable, Expressions )
 		local Operator = EXPADV.Functions[Variable .. "()"] or EXPADV.Functions[Variable .. "(...)"]
 		
 		if !Operator and AsClass and AsClass["()"] then
-			return quick(string.format("Context.Classes[%q][%q]", Variable,"()"), AsClass["()"])
+			return quick("Context.Classes[\"" .. Variable .. "\"][\"()\"]", AsClass["()"])
 		end
 
 		if !Operator then self:TraceError( Trace, "No such function %s()", Variable ) end
@@ -736,7 +737,7 @@ function Compiler:Compile_FUNC( Trace, Variable, Expressions )
 		local Signature, BestMatch = ""
 
 		for I = 1, #Expressions do
-			local Match = string.format( "%s(%s...)", Variable, Signature )
+			local Match = Variable .. "(" .. Signature .. "...)"
 
 			if EXPADV.Functions[ Match ] then BestMatch = EXPADV.Functions[ Match ] end
 
@@ -749,7 +750,7 @@ function Compiler:Compile_FUNC( Trace, Variable, Expressions )
 			Signature = Signature .. Return
 		end
 
-		local Operator = EXPADV.Functions[ string.format( "%s(%s)", Variable, Signature ) ] or BestMatch
+		local Operator = EXPADV.Functions[ Variable .. "(" .. Signature .. ")" ] or BestMatch
 
 		if Operator then
 			return Operator.Compile( self, Trace, unpack( Expressions ) )
@@ -774,7 +775,7 @@ function Compiler:Compile_METHOD( Trace, Expression, Method, Expressions, bNoErr
 		local Signature, BestMatch = Meta .. ":"
 
 		for I = 1, #Expressions do
-			local Match = string.format( "%s(%s...)", Method, Signature )
+			local Match = Method .. "(" .. Signature .. "...)"
 
 			if EXPADV.Functions[ Match ] then BestMatch = EXPADV.Functions[ Match ] end
 
@@ -787,9 +788,9 @@ function Compiler:Compile_METHOD( Trace, Expression, Method, Expressions, bNoErr
 			Signature = Signature .. Return
 		end
 
-		-- MsgN( "Looking for: ", string.format( "%s(%s)", Method, Signature ) )
+		-- MsgN( "Looking for: ", Method .. "(" .. Signature .. ")")
 
-		local Operator = EXPADV.Functions[ string.format( "%s(%s)", Method, Signature ) ] or BestMatch
+		local Operator = EXPADV.Functions[ Method .. "(" .. Signature .. ")" ] or BestMatch
 		
 		if Operator then
 			return Operator.Compile( self, Trace, Expression, unpack( Expressions ) )
@@ -823,7 +824,7 @@ function Compiler:Compile_RETURN( Trace, Expression )
 	elseif Expression and Expected == "*" then
 		-- Wildcard, do nothing :D
 	elseif Expression and Expression.Return == "void" then
-		return Quick( string.format("@return nil, %q", Expected))
+		return Quick( "@return nil, \"" .. Expected .. "\"" )
 	elseif !Expression then
 		self:TraceError( Trace, "Can not return void here, %s expected.", self:NiceClass( Expected ) )
 	elseif Expression and Expected ~= "void" and Expression.Return ~= Expected and Expression.Return ~= "void" then
@@ -832,13 +833,13 @@ function Compiler:Compile_RETURN( Trace, Expression )
 		self:TraceError( Trace, "Can not return %s here, void expected.", self:NiceClass( Expression.Return ) )
 	end 
 
-	Expression.Inline = string.format( "@return %s, %q", Expression.Inline, Expression.Return or "void" )
+	Expression.Inline = "@return " .. Expression.Inline .. ", \"" .. ( Expression.Return or "void" ) .. "\""
 
 	return Expression
 end
 
 function Compiler:Comile_EVENT_DEL( Trace, Name )
-	return { Trace = Trace, Prepare = string.format( "Context.event_%s = nil", Name ), FLAG = EXPADV_PREPARE }
+	return { Trace = Trace, Prepare = "Context.event_" .. Name .. " = nil", FLAG = EXPADV_PREPARE }
 end
 
 function Compiler:Compile_EVENT( Trace, Name, Params, UseVarg, Sequence, Memory )
@@ -865,7 +866,7 @@ function Compiler:Compile_EVENT( Trace, Name, Params, UseVarg, Sequence, Memory 
 
 	local Sequence = self:Compile_SEQ( Trace, { self:Compile_SEQ( Trace, PreSequence ), Sequence } )
 
-	local Lua = string.format( "Context.event_%s = function( %s )\nif !Context.Online then return end\n%s\n%send", Name, table.concat( Inputs, "," ), Sequence.Prepare or "", Sequence.Inline or "" )
+	local Lua = "Context.event_" .. Name .. " = function( " .. table.concat( Inputs, "," ) .. " )\nif !Context.Online then return end\n" .. ( Sequence.Prepare or "" ) .. "\n" .. ( Sequence.Inline or "" ) .. "end"
 
 	return { Trace = Trace, Prepare = string.gsub(Lua, "@return", "return"), FLAG = EXPADV_PREPARE }
 end
@@ -876,26 +877,26 @@ local function memory(Memory)
 	local Cells = {}
 	for _, MemRef in pairs(Memory) do Cells[#Cells+1] = MemRef end
 
-	local CellTable = string.format("{%s}", table.concat(Cells, ","))
+	local CellTable = "{" .. table.concat(Cells, ",") .. "}"
 
-	local PushStack = string.format([[
-		local Cells = %s
+	local PushStack = [[
+		local Cells = ]] .. CellTable .. [[
 		local Memory, Delta, Changed = {}, {}, {}
 		for _, MemRef in pairs(Cells) do
 			Memory[MemRef] = Context.Memory[MemRef]; Context.Memory[MemRef] = nil
 			Delta[MemRef] = Context.Delta[MemRef]; Context.Delta[MemRef] = nil
 			Changed[MemRef] = Context.Changed[MemRef]; Context.Changed[MemRef] = nil
 		end
-	]], CellTable)
+	]]
 
-	local PopStack = string.format([[
+	local PopStack = [[
 		for _, MemRef in pairs(Cells) do
 			if Memory[MemRef] == nil then continue end
 			Context.Memory[MemRef] = Memory[MemRef]
 			Context.Delta[MemRef] = Delta[MemRef]
 			Context.Changed[MemRef] = Changed[MemRef]
 		end
-	]], CellTable)
+	]]
 
 	return PushStack, PopStack
 end
@@ -917,16 +918,16 @@ function Compiler:Build_Function( Trace, Params, UseVarg, Sequence, Memory )
 			self:TraceError( Trace, "Invalid argument #%i, %s can not be used as function argument", I, self:NiceClass( Type ) )
 		end
 		
-		local Lua = string.format( [[
-		if IN_%i == nil or IN_%i[1] == nil then
-			Context:Throw( %s, "invoke", "Invalid argument #%i, %s expected got void." )
-		]], I, I, CompiledTrace, I, self:NiceClass( Type ) )
+		local Lua = [[
+		if IN_]] .. I .. [[ == nil or IN_]] .. I .. [[[1] == nil then
+			Context:Throw( ]] .. CompiledTrace .. [[, "invoke", "Invalid argument #]] .. I .. [[, ]] .. self:NiceClass( Type ) .. [[ expected got void." )
+		]]
 
 		if Param[2] ~= "_vr" then
-			Lua = Lua .. string.format( [[
-			elseif IN_%i[2] ~= %q then
-				Context:Throw( %s, "invoke", "Invalid argument #%i, %s expected got " .. EXPADV.TypeName( IN_%i[2] ) )
-			]], I, Type, CompiledTrace, I, self:NiceClass( Type ), I )
+			Lua = Lua .. [[
+			elseif IN_]] .. I .. [[[2] ~= "]] .. Type .. [[" then
+				Context:Throw( ]] .. CompiledTrace .. [[, "invoke", "Invalid argument #]] .. I .. [[, ]] .. self:NiceClass( Type ) .. [[ expected got " .. EXPADV.TypeName( IN_]] .. I .. [[[2] ) )
+			]]
 		end
 
 		Lua = Lua .. "end"
@@ -945,7 +946,7 @@ function Compiler:Build_Function( Trace, Params, UseVarg, Sequence, Memory )
 	
 	local Sequence = self:Compile_SEQ( Trace, { self:Compile_SEQ( Trace, PreSequence ), Sequence, PostSequence } )
 
-	local Lua = string.format( "function( %s )\nif !Context.Online then return end\n%s\n%send", table.concat( Inputs, "," ), Sequence.Prepare or "", Sequence.Inline or "" )
+	local Lua = "function( " .. table.concat( Inputs, "," ) .. " )\nif !Context.Online then return end\n" .. ( Sequence.Prepare or "" ) .. "\n" .. ( Sequence.Inline or "" ) .."end"
 
 	if PopStack then
 		Lua = string.gsub(Lua, "@return(.-), (.-)\n", [[
@@ -954,7 +955,7 @@ function Compiler:Build_Function( Trace, Params, UseVarg, Sequence, Memory )
 			return Value, Type
 		]] )
 
-		Lua = string.gsub(Lua, "@return", string.format("%s\nreturn", PopStack))
+		Lua = string.gsub(Lua, "@return", PopStack .. "\nreturn")
 	end
 
 	return { Trace = Trace, Inline = string.gsub(Lua, "@return", "return" ), Return = "f", FLAG = EXPADV_INLINE }
@@ -985,7 +986,7 @@ function Compiler:Compile_TABLE( Trace, KeyValues )
 	local Defined = self:DefineVariable( )
 	local Quick = Quick(Defined, "t")
 
-	local Prepare = string.format( "%s = { Data = { }, Types = { }, Look = { }, Size = 0, Count = 0, HasChanged = false }", Defined)
+	local Prepare = Defined .. " = { Data = { }, Types = { }, Look = { }, Size = 0, Count = 0, HasChanged = false }"
 	Statments[1] = { Trace = Trace, Prepare = Prepare, Return = "", FLAG = EXPADV_PREPARE }
 
 	for Key, Value in pairs( KeyValues ) do
@@ -1010,7 +1011,7 @@ function Compiler:Compile_FOR( Trace, Class, AssInstr, Memory, Start, End, Step,
 		self:TraceError( Trace, "No such loop 'for(%s = %s; %s; %s)'", self:NiceClass( Class.Short, Start.Return, End.Return, Step.Return ) )
 	end
 
-	local Lua = string.format( "%s\n%s\n%s\n%s", AssInstr.Prepare or "", AssInstr.Inline or "", Sequence.Prepare or "", Sequence.Inline or "" )
+	local Lua = ( AssInstr.Prepare or "" ) .. "\n" .. ( AssInstr.Inline or "" ) .. "\n" .. ( Sequence.Prepare or "" ) .. "\n" .. ( Sequence.Inline or "" )
 	
 	local NewSequence = { Trace = Trace, Prepare = Lua, Return = "", FLAG = EXPADV_PREPARE }
 	return Operator.Compile( self, Trace, Start, End, Step, NewSequence )
@@ -1084,19 +1085,19 @@ end
    --- */
 
 /*function Compiler:Compile_CLASS(Trace, className, Sequence, Cells)
-	local Prepare = string.format([[
-		local THIS = {name = %q, Memory = {}, Delta = {}}
-		Context.Classes[%q] = THIS
+	local Prepare = [[
+		local THIS = {name = "]] .. className .. [[", Memory = {}, Delta = {}}
+		Context.Classes["]] .. className .. [["] = THIS
 
 		THIS.__index = THIS
 		THIS.Memory.__index = THIS.Memory
 		THIS.Delta.__index = THIS.Delta
-		%s
-		for Cell,_ in pairs(%s) do
+		]] .. ( Sequence.Prepare or "" ) .. [[
+		for Cell,_ in pairs(]] .. EXPADV.ToLuaTable(Cells) .. [[) do
 			THIS.Memory[Cell] = Context.Memory[Cell]
 			Context.Memory[Cell] = nil
 		end
-	]], className, className, Sequence.Prepare or "", EXPADV.ToLuaTable(Cells))
+	]]
 
 	return { Trace = Trace, Sequence.Inline or "", Prepare = Prepare,  Return = "", FLAG = EXPADV_INLINEPREPARE }
 end
@@ -1121,16 +1122,16 @@ function Compiler:Compile_AddMethod( Trace, ClassName, Name, Cell, Perams, UseVa
 			self:TraceError( Trace, "Invalid argument #%i, %s can not be used as function argument", I, self:NiceClass( Type ) )
 		end
 		
-		local Lua = string.format( [[
-		if IN_%i == nil or IN_%i[1] == nil then
-			Context:Throw( %s, "invoke", "Invalid argument #%i, %s expected got void." )
-		]], I, I, CompiledTrace, I, self:NiceClass( Type ) )
+		local Lua = [[
+		if IN_]] .. I .. [[ == nil or IN_]] .. I .. [[[1] == nil then
+			Context:Throw( ]] .. CompiledTrace .. [[, "invoke", "Invalid argument #]] .. I .. [[, ]] .. self:NiceClass( Type ) .. [[ expected got void." )
+		]]
 
 		if Param[2] ~= "_vr" then
-			Lua = Lua .. string.format( [[
-			elseif IN_%i[2] ~= %q then
-				Context:Throw( %s, "invoke", "Invalid argument #%i, %s expected got " .. EXPADV.TypeName( IN_%i[2] ) )
-			]], I, Type, CompiledTrace, I, self:NiceClass( Type ), I )
+			Lua = Lua .. [[
+			elseif IN_]] .. I .. [[[2] ~= "]] .. Type .. [[" then
+				Context:Throw( ]] .. CompiledTrace .. [[, "invoke", "Invalid argument #]] .. I .. [[, ]] .. self:NiceClass( Type ) .. [[ expected got " .. EXPADV.TypeName( IN_]] .. I .. [[[2] ) )
+			]]
 		end
 
 		Lua = Lua .. "end"
@@ -1143,14 +1144,14 @@ function Compiler:Compile_AddMethod( Trace, ClassName, Name, Cell, Perams, UseVa
 
 	local Sequence = self:Compile_SEQ( Trace, { self:Compile_SEQ( Trace, PreSequence ), Sequence } )
 
-	Signature = string.format([[%s(%s)]],Name, table.concat(Signature,""))
-	Sequence.Prepare = string.format([[
-		Context.Classes[%q]["%s"] = function(THIS, %s)
-			Context.Memory[%s] = THIS
-			%s
-			%s
+	Signature = Name .. "(" .. table.concat(Signature,"") .. ")"
+	Sequence.Prepare = [[
+		Context.Classes["]] .. ClassName .. [["]["]] .. Signature .. [["] = function(THIS, ]] .. table.concat(Inputs, "," ) .. [[)
+			Context.Memory[]] .. Cell.Memory .. [[] = THIS
+			]] .. ( Sequence.Prepare or "" ) .. [[
+			]] .. ( Sequence.Inline or "" ) .. [[
 		end
-	]], ClassName, Signature, table.concat(Inputs, "," ), Cell.Memory, Sequence.Prepare or "", Sequence.Inline or "")
+	]] 
 
 	return Sequence, Signature
 end
@@ -1159,18 +1160,18 @@ function Compiler:Compile_CONSTR( Trace, Cell, Perams, UseVarg, Sequence )
 	--describe(Sequence)
 	local Cells = EXPADV.ToLuaTable(self.curClass.Cells)
 
-	Sequence.Prepare = string.format([[
-		local USER_CLASS = Context.Classes[%q]
+	Sequence.Prepare = [[
+		local USER_CLASS = Context.Classes["]] .. self.curClass.name .. [["]
 		THIS = setmetatable({Memory = setmetatable({},USER_CLASS.Memory), Delta = setmetatable({},USER_CLASS.Delta)}, USER_CLASS)
 		
-		for Cell,_ in pairs(%s) do
+		for Cell,_ in pairs(]] .. Cells .. [[) do
 			Context.Memory[Cell] = THIS.Memory[Cell]
 			Context.Delta[Cell] = THIS.Delta[Cell]
 		end
 
-		%s
+		]] .. Sequence.Prepare .. [[
 
-		for Cell,_ in pairs(%s) do
+		for Cell,_ in pairs(]] .. Cells .. [[) do
 			THIS.Memory[Cell] = Context.Memory[Cell]
 			THIS.Delta[Cell] = Context.Delta[Cell]
 			Context.Memory[Cell] = nil
@@ -1178,7 +1179,7 @@ function Compiler:Compile_CONSTR( Trace, Cell, Perams, UseVarg, Sequence )
 		end
 
 		return THIS
-	]], self.curClass.name, Cells, Sequence.Prepare, Cells)
+	]]
 
 	local Instr, Signature = self:Compile_AddMethod( Trace, self.curClass.name, "", Cell, Perams, UseVarg, Sequence, Memory )
 	
@@ -1207,9 +1208,9 @@ function Compiler:Compile_NEW( Trace, Variable, Expressions )
 		local BestMatch = ""
 
 		for I = 1, #Expressions do
-			local Match = string.format( "%s...", Signature )
+			local Match = Signature .. "..."
 
-			if Class[ string.format("(%s)", Match) ] then BestMatch = Match end
+			if Class[ "(" .. Match .. ")" ] then BestMatch = Match end
 
 			local Return = Expressions[I].Return
 
@@ -1220,14 +1221,14 @@ function Compiler:Compile_NEW( Trace, Variable, Expressions )
 			Signature = Signature .. Return
 		end
 		
-		Constuctor = Class[string.format("(%s)", Signature)] and Signature or BestMatch
+		Constuctor = Class["(" .. Signature .. ")"] and Signature or BestMatch
 	end
 
 	if Constuctor then
 		local Operator = self:LookUpOperator( "new", "s", "s", "..." )
 		
 		if Operator then
-			local Instr = Operator.Compile( self, Trace, Quick(Variable,"s"), Quick(string.format("(%s)", Constuctor),"s"), unpack( Expressions ) )
+			local Instr = Operator.Compile( self, Trace, Quick(Variable,"s"), Quick("(" .. Constuctor .. ")","s"), unpack( Expressions ) )
 			Instr.Return = self:GetClass(Variable).Short
 			return Instr
 		end
