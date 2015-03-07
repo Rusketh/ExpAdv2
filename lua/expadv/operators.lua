@@ -853,7 +853,6 @@ function EXPADV.BuildLuaOperator( Operator )
 	local function Interpret(Input)
 	
 		local BuildTable = {}
-		BuildTable.Codes = {}
 		BuildTable.Values = {}
 		BuildTable.VarValues = {}
 		BuildTable.Imports = {}
