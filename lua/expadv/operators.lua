@@ -880,11 +880,15 @@ function EXPADV.BuildLuaOperator( Operator )
 				local Uses = 0
 
 				if Operator.FLAG == EXPADV_INLINE or Operator.FLAG == EXPADV_INLINEPREPARE then
-					Uses = #OpInline.Values
+					if OpInline.Values[I] then
+						Uses = #OpInline.Values[I]
+					end
 				end
 
 				if Operator.FLAG == EXPADV_PREPARE or Operator.FLAG == EXPADV_INLINEPREPARE then
-					Uses = Uses + #OpPrepare.Values
+					if OpPrepare.Values[I] then
+						Uses = Uses + #OpPrepare.Values[I]
+					end
 				end
 
 				-- Generate the inline and preperation.
