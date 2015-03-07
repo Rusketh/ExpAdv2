@@ -727,7 +727,17 @@ function EXPADV.BuildLuaOperator( Operator )
 	
 	local TokenPrepareFuncs = {
 		define = function(Input, BuildTable, I)
-		
+			local StartPos, EndPos = string_find( Input, "define [%w_%%, \t]+" )
+			local define_list = string.split(string_gsub(string_sub( Input, StartPos + 9, EndPos), "[\t ]", ""), ",")
+			
+			BuildTable[ #BuildTable + 1 ] = ""
+			BuildTable.Defines[#BuildTable.Defines + 1] = {DefinePosition = #BuildTable, Assigned = Assigned, List = define_list }
+			
+			for k,v in pairs(define_list) do
+				BuildTable.Symbols[v] = {}
+			end
+			
+			return EndPos + 1
 		end,
 		
 		setting = function(Input, BuildTable, I)
@@ -735,8 +745,7 @@ function EXPADV.BuildLuaOperator( Operator )
 			
 			if StartPos then
 				BuildTable[ #BuildTable + 1 ] = ""
-				local setting_table = {Setting = string_sub(Input, StartPos, EndPos), Position = #BuildTable}
-				BuildTable.Settings[#BuildTable.Settings + 1] = setting_table
+				BuildTable.Settings[#BuildTable.Settings + 1] = {Setting = string_sub(Input, StartPos, EndPos), Position = #BuildTable}
 				return EndPos + 1
 			end
 			
@@ -787,35 +796,58 @@ function EXPADV.BuildLuaOperator( Operator )
 			return I + 1
 		end,
 		trace = function(Input, BuildTable, I)
-		
+			BuildTable[#BuildTable + 1] = ""
+			BuildTable.Traces[#BuildTable.Traces + 1] = #BuildTable
+			return I + 5
 		end,
 		["..."] = function(Input, BuildTable, I)
-		
+			BuildTable[#BuildTable + 1] = ""
+			BuildTable.VarValues[#BuildTable.VarValues + 1] = #BuildTable
+			return I + 3
 		end
 	}
 	
 	local function InterpretToken(Input, BuildTable, I) --Returns position
 		if Input[I] == "@" then
+			I = I + 1
 			for token, func in pairs(TokenPrepareFuncs) do
-				local EndPos = I + #token + 1
+				local EndPos = I + #token
 				if string_sub(Input, I, EndPos) == token then
 					return func(Input, BuildTable, EndPos + 1)
 				end
 			end
+			
+			local StartPos, EndPos = string_find(Input, "[_%w]+", I)
+			if StartPos then
+				local symbol = string_sub(Input, StartPos, EndPos)
+				
+				local Positions = BuildTable.Symbols[symbol]
+				if not Positions then
+					Positions = {}
+					BuildTable.Symbols[symbol] = Positions
+				end
+				
+				BuildTable[#BuildTable + 1] = ""
+				Positions[#Positions + 1] = #BuildTable
+				
+				return EndPos + 1
+			end
+			
 			print("@ symbol with an invalid token!")
 		
 		elseif Input[I] == "$" then
-			local StartPos, EndPos = string_find(Input, "[_%w]+", I + 1)
+			I = I + 1
+			local StartPos, EndPos = string_find(Input, "[_%w]+", I)
 			
 			if StartPos then
 				BuildTable.Imports[#BuildTable.Imports + 1] = string_sub(Input, StartPos, EndPos)
-				return EndPos + 1
+				return I
 			end
-			print("$ symbol without a following import name!")
 			
+			print("$ symbol without a following import name!")
 		end
 		
-		return I + 1 --Nothing valid was found so just return the next position
+		return I
 	end
 	
 	local function Interpret(Input)
@@ -823,11 +855,13 @@ function EXPADV.BuildLuaOperator( Operator )
 		local BuildTable = {}
 		BuildTable.Codes = {}
 		BuildTable.Values = {}
-		BuildTable.VarValue = {}
+		BuildTable.VarValues = {}
 		BuildTable.Imports = {}
 		BuildTable.Defines = {}
 		BuildTable.Settings = {}
 		BuildTable.Prepares = {}
+		BuildTable.Traces = {}
+		BuildTable.Symbols = {}
 	
 		local I = 1
 		while I <= #Input do
@@ -880,15 +914,17 @@ function EXPADV.BuildLuaOperator( Operator )
 				local Uses = 0
 
 				if Operator.FLAG == EXPADV_INLINE or Operator.FLAG == EXPADV_INLINEPREPARE then
-					if OpInline.Values[I] then
+					--Not sure if this check is needed
+					--if OpInline.Values[I] then
 						Uses = #OpInline.Values[I]
-					end
+					--end
 				end
 
 				if Operator.FLAG == EXPADV_PREPARE or Operator.FLAG == EXPADV_INLINEPREPARE then
-					if OpPrepare.Values[I] then
+					--Not sure if this check is needed
+					--if OpPrepare.Values[I] then
 						Uses = Uses + #OpPrepare.Values[I]
-					end
+					--end
 				end
 
 				-- Generate the inline and preperation.
@@ -971,7 +1007,7 @@ function EXPADV.BuildLuaOperator( Operator )
 
 		-- Now we handel any varargs!
 		if Operator.UsesVarg and #Inputs > Operator.InputCount then
-			if ( OpPrepare and string_find( OpPrepare, "(@%.%.%.)" ) ) or ( OpInline and string_find( OpInline, "(@%.%.%.)" ) ) then
+			if #OpPrepare.VarValues > 0 or #OpInline.VarValues > 0 then
 				local VAPrepare, VAInline = { }, { }
 
 				for I = Operator.InputCount + 1, #Inputs do
@@ -991,7 +1027,7 @@ function EXPADV.BuildLuaOperator( Operator )
 					end
 
 					if Input.Return ~= "..." and Input.Return ~= "_vr" then
-						Inline = string_format( "{%s,%q}", Inline, Input.Return or "NIL" )
+						Inline = "{" .. Inline .. ",\"" .. ( Input.Return or "NIL" ) .. "\"}"
 					end
 
 					VAInline[ #VAInline + 1 ] = Inline
@@ -1005,21 +1041,31 @@ function EXPADV.BuildLuaOperator( Operator )
 				end
 
 				if Operator.FLAG == EXPADV_PREPARE or Operator.FLAG == EXPADV_INLINEPREPARE then
-					OpPrepare = string_gsub( OpPrepare, "(@%.%.%.)", table_concat( VAInline, "," ) )
+					local VAInlineLua = table_concat( VAInline, "," )
+					for k,v in pairs(OpPrepare.VarValues) do
+						OpPrepareBuild[v] = VAInlineLua
+					end
 				end
 
 				if Operator.FLAG == EXPADV_INLINE or Operator.FLAG == EXPADV_INLINEPREPARE then
-					OpInline = string_gsub( OpInline, "(@%.%.%.)", table_concat( VAInline, "," ) )
+					local VAInlineLua = table_concat( VAInline, "," )
+					for k,v in pairs(OpInline.VarValues) do
+						OpInlineBuild[v] = VAInlineLua
+					end
 				end
 
 			end
 		else
 			if Operator.FLAG == EXPADV_PREPARE or Operator.FLAG == EXPADV_INLINEPREPARE then
-				OpPrepare = string_gsub( OpPrepare, "(@%.%.%.)", "nil" )
+				for k,v in pairs(OpPrepare.VarValues) do
+					OpPrepareBuild[v] = "nil"
+				end
 			end
 
 			if Operator.FLAG == EXPADV_INLINE or Operator.FLAG == EXPADV_INLINEPREPARE then
-				OpInline = string_gsub( OpInline, "(@%.%.%.)", "nil" )
+				for k,v in pairs(OpInline.VarValues) do
+					OpInlineBuild[v] = "nil"
+				end
 			end
 		end
 
@@ -1027,29 +1073,26 @@ function EXPADV.BuildLuaOperator( Operator )
 		local Uses = 0
 
 		if Operator.FLAG == EXPADV_INLINE or Operator.FLAG == EXPADV_INLINEPREPARE then
-			local _, Add = string_gsub( OpInline, "@trace", "" )
-			Uses = Add
+			Uses = #OpInline.Traces
 		end
 
 		if Operator.FLAG == EXPADV_PREPARE or Operator.FLAG == EXPADV_INLINEPREPARE then
-			local _, Add = string_gsub( OpPrepare, "@trace", "" )
-			Uses = Uses + Add
+			Uses = Uses + #OpPrepare.Traces
 		end
 
 		if Uses >= 1 then
-			local Trace = Compiler:CompileTrace( Trace )
-
-			if Uses >= 2 then
-				OpPrepare = string_format( "local Trace = %s\n%s", Trace, OpPrepare or "" )
-				Trace = "Trace"
-			end
+			local TraceOriginal = Compiler:CompileTrace( Trace )
 
 			if Operator.FLAG == EXPADV_PREPARE or Operator.FLAG == EXPADV_INLINEPREPARE then
-				OpPrepare = string_gsub( OpPrepare, "@trace", Trace )
+				for k,v in pairs(OpPrepare.Traces) do
+					OpPrepareBuild[v] = TraceOriginal
+				end
 			end
 
 			if Operator.FLAG == EXPADV_INLINE or Operator.FLAG == EXPADV_INLINEPREPARE then
-				OpInline = string_gsub( OpInline, "@trace", Trace )
+				for k,v in pairs(OpInline.Traces) do
+					OpInlineBuild[v] = TraceOriginal
+				end
 			end
 		end
 
@@ -1057,39 +1100,40 @@ function EXPADV.BuildLuaOperator( Operator )
 		local Definitions = { }
 
 		if Operator.FLAG == EXPADV_PREPARE or Operator.FLAG == EXPADV_INLINEPREPARE then
-			local DefinedLines = { }
-
-			for StartPos, EndPos, Assigned in string_gmatch( OpPrepare, "()@define [a-zA-Z_0-9%%, \t]+()(=?)" ) do
-				DefinedLines[ #DefinedLines + 1 ] = { StartPos, EndPos, Assigned }
-			end
-
-			for I = #DefinedLines, 1, -1 do -- Work backwards, so we dont break our preparation.
-				local NewLine = { }
-
-				local DefinedLine = DefinedLines[I]
-				local Start, End, Assigned = DefinedLine[1], DefinedLine[2], DefinedLine[3]
-
-				local Line = string_sub( OpPrepare, Start + 8, End - 1  )
-
-				for Name in string_gmatch( Line, "([a-zA-Z0-9_]+)" ) do
-					local Lua = Compiler:DefineVariable( )
-
-					NewLine[ #NewLine + 1 ] = Lua
-
-					Definitions[ "@" .. Name ] = Lua
-				end
-
-				local Insert = Assigned and table_concat( NewLine, "," ) or " "
-				
-				OpPrepare = string_sub( OpPrepare, 1, Start - 1 ) .. Insert .. string_sub( OpPrepare, End - 1 )
-			end
-
-			OpPrepare = string_gsub( OpPrepare, "(@[a-zA-Z0-9_]+)", Definitions )
+			
+			for k, tbl in pairs(OpPrepare.Defines) do
 	
-			OpPrepare = EXPADV.Interprit( Operator, Compiler, OpPrepare )
-			--@setting stuff
-			--local Setting = Operator.Component:ReadSetting( Data.Setting, nil )
-			--return EXPADV.ToLua(Setting)
+				local NewLine = {}
+				for o, symbol in pairs(tbl.List) do
+					local LUA = Compiler:DefineVariable( )
+					Definitions[symbol] = LUA
+					NewLine[#NewLine + 1] = LUA
+				end
+				
+				OpPrepareBuild[tbl.DefinePosition] = table_concat(NewLine, ",")
+			end
+			
+			for symbol, tbl in pairs(OpPrepare.Symbols) do
+				if not Definitions[symbol] then
+					error("Invalid variable: " .. symbol)
+				end
+				for k, position in pairs(tbl) do
+					OpPrepareBuild[Position] = Definitions[symbol]
+				end
+			end
+			
+			for k, tbl in pairs(OpPrepare.Settings) do
+			
+				local Setting = Operator.Component:ReadSetting( tbl.Setting, nil )
+				OpPrepareBuild[tbl.Position] = EXPADV.ToLua(Setting)
+				
+			end
+			
+			for k, Variable in pairs(OpPrepare.Imports) do
+			
+				Compiler.Enviroment[Variable] = _G[Variable]
+				
+			end
 		end
 
 		-- Now lets format the inline
@@ -1098,15 +1142,34 @@ function EXPADV.BuildLuaOperator( Operator )
 			OpInline = string_gsub( OpInline, "(@[a-zA-Z0-9_]+)", Definitions )
 
 			OpInline = EXPADV.Interprit( Operator, Compiler, OpInline )
+			
+			for symbol, tbl in pairs(OpInline.Symbols) do
+				if not Definitions[symbol] then
+					error("Invalid variable: " .. symbol)
+				end
+				for k, position in pairs(tbl) do
+					OpInlineBuild[Position] = Definitions[symbol]
+				end
+			end
+			
+			for k, tbl in pairs(OpInline.Settings) do
+				local Setting = Operator.Component:ReadSetting( tbl.Setting, nil )
+				OpInlineBuild[tbl.Position] = EXPADV.ToLua(Setting)
+			end
+			
+			for k, Variable in pairs(OpInline.Imports) do
+				Compiler.Enviroment[Variable] = _G[Variable]
+			end
+			
 		end
 
-		if OpPrepare and OpPrepare ~= "" then
-			Preperation[#Preperation + 1] = OpPrepare
+		if #OpPrepare > 0 then
+			Preperation[#Preperation + 1] = table_concat(OpPrepareBuild, "\n")
 		end
 
 		local PreperedLines = #Preperation >= 1 and table_concat( Preperation, "\n" ) or nil
 
-		local Inst = Compiler:NewLuaInstruction( Trace, Operator, PreperedLines, OpInline )
+		local Inst = Compiler:NewLuaInstruction( Trace, Operator, PreperedLines, table_concat(OpInlineBuild, "") )
 
 		return Inst
 	end
