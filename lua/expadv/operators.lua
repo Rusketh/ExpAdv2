@@ -716,6 +716,15 @@ function EXPADV.BuildLuaOperator( Operator )
 
 	-- Build a compilation table for the operator
 	
+	local function SetTablePositionNumber(TokenTable, Position, Data)
+		local t_table = TokenTable[ Position ]
+		if not t_table then
+			t_table = {}
+			TokenTable[ Position ] = t_table
+		end
+		t_table[#t_table + 1] = Data
+	end
+	
 	local TokenPrepareFuncs = {
 		define = function(Input, BuildTable, I)
 		
@@ -725,7 +734,9 @@ function EXPADV.BuildLuaOperator( Operator )
 			local StartPos, EndPos = string_find( Input, "[%w_]+", I)
 			
 			if StartPos then
-				BuildTable[ #BuildTable + 1 ] = {name = setting, Setting = string_sub(Input, StartPos, EndPos)}
+				BuildTable[ #BuildTable + 1 ] = ""
+				local setting_table = {Setting = string_sub(Input, StartPos, EndPos), Position = #BuildTable}
+				BuildTable.Settings[#BuildTable.Settings + 1] = setting_table
 				return EndPos + 1
 			end
 			
@@ -733,37 +744,47 @@ function EXPADV.BuildLuaOperator( Operator )
 		end,
 		
 		value = function(Input, BuildTable, I)
-		
+			local StartPos, EndPos = string_find( Input, "%d+", I)
+			
+			if StartPos then
+				local value_num = tonumber(string_sub(Input, StartPos, EndPos))
+				if value_num then
+					BuildTable[ #BuildTable + 1 ] = ""
+					SetTablePositionNumber(BuildTable.Values, value_num, #BuildTable)
+					return EndPos + 1
+				end
+			end
+			
+			return I + 1
+			
 		end,
 		type = function(Input, BuildTable, I)
-		
+			local StartPos, EndPos = string_find( Input, "%d+", I)
+			
+			if StartPos then
+				local type_num = tonumber(string_sub(Input, StartPos, EndPos))
+				if type_num then
+					BuildTable[ #BuildTable + 1 ] = ""
+					SetTablePositionNumber(BuildTable.Types, type_num, #BuildTable)
+					return EndPos + 1
+				end
+			end
+			
+			return I + 1
 		end,
 		prepare = function(Input, BuildTable, I)
-		
-		end,
-		trace = function(Input, BuildTable, I)
-		
-		end,
-		["..."] = function(Input, BuildTable, I)
-		
-		end
-	}
-	local TokenCompileFuncs = {
-		define = function(Input, BuildTable, I)
-		
-		end,
-		setting = function(Data)
-			local Setting = Operator.Component:ReadSetting( Data.Setting, nil )
-			return EXPADV.ToLua(Setting)
-		end,
-		value = function(Input, BuildTable, I)
-		
-		end,
-		type = function(Input, BuildTable, I)
-		
-		end,
-		prepare = function(Input, BuildTable, I)
-		
+			local StartPos, EndPos = string_find( Input, "%d+", I)
+			
+			if StartPos then
+				local prepare_num = tonumber(string_sub(Input, StartPos, EndPos))
+				if prepare_num then
+					BuildTable[ #BuildTable + 1 ] = ""
+					SetTablePositionNumber(BuildTable.Prepares, prepare_num, #BuildTable)
+					return EndPos + 1
+				end
+			end
+			
+			return I + 1
 		end,
 		trace = function(Input, BuildTable, I)
 		
@@ -802,8 +823,11 @@ function EXPADV.BuildLuaOperator( Operator )
 		local BuildTable = {}
 		BuildTable.Codes = {}
 		BuildTable.Values = {}
+		BuildTable.VarValue = {}
 		BuildTable.Imports = {}
 		BuildTable.Defines = {}
+		BuildTable.Settings = {}
+		BuildTable.Prepares = {}
 	
 		local I = 1
 		while I <= #Input do
@@ -826,6 +850,7 @@ function EXPADV.BuildLuaOperator( Operator )
 	Operator.PrepareTable = Interpret(Operator.Prepare)
 	Operator.InlineTable = Interpret(Operator.Inline)
 	
+	
 	Operator.Compile = function( Compiler, _Trace, ... )
 		EXPADV.CanBuildOperator( Compiler, _Trace, Operator )
 
@@ -834,25 +859,32 @@ function EXPADV.BuildLuaOperator( Operator )
 
 		local Inputs, Preperation = { ... }, { }
 
-		local OpPrepare, OpInline = Operator.Prepare, Operator.Inline
+		local OpPrepare, OpInline, OpPrepareBuild, OpInlineBuild  = Operator.PrepareTable, Operator.InlineTable, {}, {}
 
+		for I = 1, #OpPrepare do
+			OpPrepareBuild[I] = OpPrepare[I]
+		end
+		
+		for I = 1, #OpInline do
+			OpInlineBuild[I] = OpInline[I]
+		end
+		
+		-- Process the inputs		
 		for I = Operator.InputCount, 1, -1 do
 
 			local Input = Inputs[I]
 			local InputInline, InputPrepare, InputReturn = "nil", ""
 			
 			if Input then
-				-- How meany times do we need this Var?
+				-- How many times do we need this Var?
 				local Uses = 0
 
 				if Operator.FLAG == EXPADV_INLINE or Operator.FLAG == EXPADV_INLINEPREPARE then
-					local _, Add = string_gsub( OpInline, "@value " .. I, "" )
-					Uses = Add
+					Uses = #OpInline.Values
 				end
 
 				if Operator.FLAG == EXPADV_PREPARE or Operator.FLAG == EXPADV_INLINEPREPARE then
-					local _, Add = string_gsub( OpPrepare, "@value " .. I, "" )
-					Uses = Uses + Add
+					Uses = Uses + #OpPrepare.Values
 				end
 
 				-- Generate the inline and preperation.
@@ -867,8 +899,8 @@ function EXPADV.BuildLuaOperator( Operator )
 					end
 
 				elseif Input.FLAG == EXPADV_FUNCTION then
-					--InputInline = Compiler:VMToLua( Input )
-					--InputReturn = Input.Return
+					-- InputInline = Compiler:VMToLua( Input )
+					-- InputReturn = Input.Return
 					error( "Compiler is yet to support virtuals" )
 				elseif Input.FLAG == EXPADV_INLINE then
 					InputInline = Input.Inline
@@ -887,31 +919,50 @@ function EXPADV.BuildLuaOperator( Operator )
 				-- Lets see if we need to localize the inline
 				if Uses >= 2 and !Input.IsRaw and !string_StartWith( InputInline, "Context.Definitions" ) then
 					local Defined = Compiler:DefineVariable( )
-					InputPrepare = string_format( "%s\n%s = %s", InputPrepare, Defined, InputInline )
+					InputPrepare = InputPrepare .. "\n" .. Defined .. " = " .. InputInline
 					InputInline = Defined
 				end
 			end
 
 			-- Place inputs into generated code
 			if Operator.FLAG == EXPADV_PREPARE or Operator.FLAG == EXPADV_INLINEPREPARE then
-				OpPrepare = string_gsub( OpPrepare, "@value " .. I, InputInline )
-				OpPrepare = string_gsub( OpPrepare, "@type " .. I, Format( "%q", InputReturn or Operator.Input[I] or "void" ) )
+				--Not sure if these checks are needed
+				--if OpPrepare.Values[I] then
+					for k, position in pairs(OpPrepare.Values[I]) do
+						OpPrepareBuild[ position ] = InputInline
+					end
+				--end
+				--if OpPrepare.Types[I] then
+					for k, position in pairs(OpPrepare.Types[I]) do
+						OpPrepareBuild[ position ] = "\"" .. ( InputReturn or Operator.Input[I] or "void" ) .. "\""
+					end
+				--end
 			end
 
 			if Operator.FLAG == EXPADV_INLINE or Operator.FLAG == EXPADV_INLINEPREPARE then
-				OpInline = string_gsub( OpInline, "@value " .. I, InputInline )
-				OpInline = string_gsub( OpInline, "@type " .. I, Format( "%q", InputReturn or Operator.Input[I] ) )
+				--if OpInline.Values[I] then
+					for k, position in pairs(OpInline.Values[I]) do
+						OpInlineBuild[ position ] = InputInline
+					end
+				--end
+				--if OpInline.Types[I] then
+					for k, position in pairs(OpInline.Types[I]) do
+						OpInlineBuild[ position ] = "\"" .. ( InputReturn or Operator.Input[I] ) .. "\""
+					end
+				--end
 			end
 
-				if Operator.FLAG == EXPADV_PREPARE or Operator.FLAG == EXPADV_INLINEPREPARE then
-					if string_find( OpPrepare, "@prepare " .. I ) then
-						OpPrepare = string_gsub( OpPrepare, "@prepare " .. I, InputPrepare or "" )
-					else
-						table_insert( Preperation, 1, InputPrepare or "" )
+			if Operator.FLAG == EXPADV_PREPARE or Operator.FLAG == EXPADV_INLINEPREPARE then
+				if OpPrepare.Prepares[I] then
+					for k, position in pairs(OpPrepare.Prepares[I]) do
+						OpPrepareBuild[ position ] = InputPrepare or ""
 					end
 				else
 					table_insert( Preperation, 1, InputPrepare or "" )
 				end
+			else
+				table_insert( Preperation, 1, InputPrepare or "" )
+			end
 		end
 
 		-- Now we handel any varargs!
@@ -1032,6 +1083,9 @@ function EXPADV.BuildLuaOperator( Operator )
 			OpPrepare = string_gsub( OpPrepare, "(@[a-zA-Z0-9_]+)", Definitions )
 	
 			OpPrepare = EXPADV.Interprit( Operator, Compiler, OpPrepare )
+			--@setting stuff
+			--local Setting = Operator.Component:ReadSetting( Data.Setting, nil )
+			--return EXPADV.ToLua(Setting)
 		end
 
 		-- Now lets format the inline
