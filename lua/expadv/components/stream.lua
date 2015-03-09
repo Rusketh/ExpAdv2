@@ -89,7 +89,7 @@ end )
 Component:AddVMFunction( "writeColor", "st:c", "", function( Context, Trace, Stream, Obj )
 	Stream.W = Stream.W + 1
 	if Stream.W >= 128 then Context:Throw( Trace, "stream", "Failed to write color to stream, maxamum stream size achived (128)" ) end
-	Stream.V[Stream.W] = Color( Obj[1], Obj[2], Obj[3], Obj[4] )
+	Stream.V[Stream.W] = Color( Obj.r, Obj.g, Obj.b, Obj.a )
 	Stream.T[Stream.W] = "c"
 end )
 
