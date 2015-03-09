@@ -166,7 +166,7 @@ Component:AddVMFunction( "stringKeys", "t:", "ar",
 
 Component:AddVMFunction( "entityKeys", "t:", "ar",
 	function(Context, Trace, Table)
-		local Array = {__type = "s"}
+		local Array = {__type = "e"}
 
 		for K, V in pairs(Table.Look) do
 			local T = type(K)

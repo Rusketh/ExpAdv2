@@ -205,8 +205,11 @@ hook.Add( "Think", "expadv.timers", function( )
 					end
 				end
 
-				Context:Execute( "Timer " .. Name, Timer.Delegate, Timer.Inputs and unpack( Timer.Inputs ) or nil )
-
+				if Timer.Inputs and #Timer.Inputs > 0 then
+					Context:Execute( "Timer " .. Name, Timer.Delegate, unpack(Timer.Inputs) )
+				else
+					Context:Execute( "Timer " .. Name, Timer.Delegate, unpack(Timer.Inputs) )
+				end
 			end
 
 			if Count > 100 then break end
@@ -1142,15 +1145,15 @@ end
 
 EXPADV.SharedOperators( )
 
-Component:AddVMFunction( "ArrayToJasn", "ar", "s", function(Context, Trace, Array)
+Component:AddVMFunction( "ArrayToJSON", "ar", "s", function(Context, Trace, Array)
 	return util.TableToJSON(arrayToJSON(Array))
 end )
 
-Component:AddVMFunction( "tableToJasn", "t", "s", function(Context, Trace, Table)
+Component:AddVMFunction( "tableToJSON", "t", "s", function(Context, Trace, Table)
 	return util.TableToJSON(tableToJSON(Table))
 end )
 
-Component:AddVMFunction( "jasnToTable", "s", "t", function(Context, Trace, JSON)
+Component:AddVMFunction( "jSONToTable", "s", "t", function(Context, Trace, JSON)
 	return luaToTable(util.JSONToTable(JSON))
 end )
 
@@ -1178,7 +1181,7 @@ elseif CLIENT then
 
 			if #WhiteList > 0 then
 				for _, listed in pairs(WhiteList) do
-					if !WhiteList[Concmd] then return false end
+					if !table.HasValue(WhiteList, Concmd) then return false end
 				end
 			end
 		end
@@ -1190,6 +1193,20 @@ elseif CLIENT then
 
 	net.Receive("expadv.cmd", function()
 		Exec(net.ReadString())
+	end)
+
+	concommand.Add("expadv_allow_cmd", function(Player, _, Args)
+		local cmd = table.concat(Args, " ")
+
+		local WhiteList = Component:ReadUserSetting( "concmd_whitelist", DEFAULT_BLACKLIST )
+
+		if table.HasValue(WhiteList, cmd) then return MsgN(cmd, " is already whitelisted.") end
+
+		table.insert(WhiteList, cmd)
+
+		EXPADV.SaveConfig()
+
+		MsgN(cmd, " has been whitelisted, you may undo this by editing 'data/cl_expadv.txt'.")
 	end)
 end
 
