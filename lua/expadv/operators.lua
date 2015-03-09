@@ -1118,11 +1118,15 @@ function EXPADV.BuildLuaOperator( Operator )
 			end
 			
 			for symbol, tbl in pairs(OpPrepare.Symbols) do
-				if not Definitions[symbol] then
-					error("Invalid variable: " .. symbol)
-				end
-				for k, position in pairs(tbl) do
-					OpPrepareBuild[Position] = Definitions[symbol]
+				if Definitions[symbol] then
+					for k, Position in pairs(tbl) do
+						OpPrepareBuild[Position] = Definitions[symbol]
+					end
+				else
+					for k, Position in pairs(tbl) do
+						OpPrepareBuild[Position] = "@" .. symbol
+					end
+					--error("Invalid variable: " .. symbol)
 				end
 			end
 			
@@ -1145,11 +1149,15 @@ function EXPADV.BuildLuaOperator( Operator )
 			-- Replace the locals in our prepare!
 			
 			for symbol, tbl in pairs(OpInline.Symbols) do
-				if not Definitions[symbol] then
-					error("Invalid variable: " .. symbol)
-				end
-				for k, position in pairs(tbl) do
-					OpInlineBuild[Position] = Definitions[symbol]
+				if Definitions[symbol] then
+					for k, Position in pairs(tbl) do
+						OpInlineBuild[Position] = Definitions[symbol]
+					end
+				else
+					for k, Position in pairs(tbl) do
+						OpInlineBuild[Position] = "@" .. symbol
+					end
+					--error("Invalid variable: " .. symbol)
 				end
 			end
 			
