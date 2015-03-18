@@ -727,9 +727,8 @@ function EXPADV.BuildLuaOperator( Operator )
 	
 	local TokenPrepareFuncs = {
 		define = function(Input, BuildTable, I)
-			local StartPos, EndPos = string_find( Input, "[%w_%%, \t]+", I + 8 )  
+			local StartPos, EndPos = string_find( Input, "[%w_%%, \t]+", I )  
 			local define_list = string.Split(string_gsub(string_sub( Input, StartPos, EndPos), "%s", ""), ",")
-			
 			if StartPos then
 				BuildTable[ #BuildTable + 1 ] = ""
 				BuildTable.Defines[#BuildTable.Defines + 1] = {DefinePosition = #BuildTable, Assigned = Assigned, List = define_list }
@@ -741,7 +740,7 @@ function EXPADV.BuildLuaOperator( Operator )
 				return EndPos + 1
 			end
 			
-			return I + 1
+			return I
 		end,
 		
 		setting = function(Input, BuildTable, I)
@@ -753,7 +752,7 @@ function EXPADV.BuildLuaOperator( Operator )
 				return EndPos + 1
 			end
 			
-			return I + 1
+			return I
 		end,
 		
 		value = function(Input, BuildTable, I)
@@ -768,7 +767,7 @@ function EXPADV.BuildLuaOperator( Operator )
 				end
 			end
 			
-			return I + 1
+			return I
 			
 		end,
 		type = function(Input, BuildTable, I)
@@ -783,7 +782,7 @@ function EXPADV.BuildLuaOperator( Operator )
 				end
 			end
 			
-			return I + 1
+			return I
 		end,
 		prepare = function(Input, BuildTable, I)
 			local StartPos, EndPos = string_find( Input, "%d+", I)
@@ -797,17 +796,17 @@ function EXPADV.BuildLuaOperator( Operator )
 				end
 			end
 			
-			return I + 1
+			return I
 		end,
 		trace = function(Input, BuildTable, I)
 			BuildTable[#BuildTable + 1] = ""
 			BuildTable.Traces[#BuildTable.Traces + 1] = #BuildTable
-			return I + 5
+			return I
 		end,
 		["..."] = function(Input, BuildTable, I)
 			BuildTable[#BuildTable + 1] = ""
 			BuildTable.VarValues[#BuildTable.VarValues + 1] = #BuildTable
-			return I + 3
+			return I
 		end
 	}
 	
@@ -1173,12 +1172,12 @@ function EXPADV.BuildLuaOperator( Operator )
 		end
 
 		if #OpPrepare > 0 then
-			Preperation[#Preperation + 1] = table_concat(OpPrepareBuild, "\n")
+			Preperation[#Preperation + 1] = table_concat(OpPrepareBuild)
 		end
 
-		local PreperedLines = #Preperation >= 1 and table_concat( Preperation, "\n" ) or nil
+		local PreperedLines = #Preperation >= 1 and table_concat( Preperation, "\n") or nil
 
-		local Inst = Compiler:NewLuaInstruction( Trace, Operator, PreperedLines, table_concat(OpInlineBuild, "") )
+		local Inst = Compiler:NewLuaInstruction( Trace, Operator, PreperedLines, table_concat(OpInlineBuild) )
 
 		return Inst
 	end
