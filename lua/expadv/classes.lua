@@ -385,7 +385,7 @@ function EXPADV.LoadClasses( )
 
 	 	if !Class.ToString then
 	 		Class.ToString = function( Obj )
- 				return string.format("<%s: %s>", Class.Name, tostring( Obj ) )
+ 				return "<" .. Class.Name .. ": " .. tostring( Obj ) .. ">"
  			end
  		end
 

@@ -79,7 +79,7 @@ EXPADV.AddVMOperator( nil, "call", "f,s,...", "_vr",
 		elseif rType == "void" then
 			Context:Throw( Trace, "invoke", "Invalid return value, " .. EXPADV.TypeName(rExpect) .. " expected got void")
 		elseif rExpect ~= rType then
-			Context:Throw( Trace, "invoke", string.format("Invalid return value, %s expected got %s", EXPADV.TypeName(rExpect), EXPADV.TypeName(rType)))
+			Context:Throw( Trace, "invoke", "Invalid return value, " .. EXPADV.TypeName(rExpect) .. " expected got " .. EXPADV.TypeName(rType))
 		end
 
 		return rValue
@@ -105,7 +105,7 @@ local function buildLua(...)
 			if Input.Return == "_vr" then
 				Outputs[#Outputs + 1] = Input.Inline
 			else
-				Outputs[#Outputs + 1] = string.format("{%s,%q}", Input.Inline, Input.Return)
+				Outputs[#Outputs + 1] = "{" .. Input.Inline .. ",\"" .. Input.Return .. "\"}"
 			end
 		end
 	end
@@ -126,10 +126,10 @@ EXPADV.AddGeneratedFunction( nil, "invoke", "cls,d,...", "",
 		local Arguments = ""
 		if #Inputs > 0 then Arguments = "," .. table.concat(Inputs, ",") end
 
-		Prepare = Prepare .. "\n" .. string.format([[%s = %s]], dVar, Delegate.Inline)
-		Prepare = Prepare .. "\n" .. string.format([[%s, %s = %s(Context %s)]], Inline, tVar, dVar, Arguments)
-		Prepare = Prepare .. "\n" .. string.format([[if !%s then Context:Throw(%s, "invoke", "Delegate expected to return %s got void.") end]], Inline, Compiler:CompileTrace(Trace), Compiler:NiceClass(Class.PointClass))
-		Prepare = Prepare .. "\n" .. string.format([[if %s ~= %q then Context:Throw(%s, "invoke", "Delegate expected to return %s got " .. EXPADV.TypeName(%s) .. ".") end]], tVar, Class.PointClass, Compiler:CompileTrace(Trace), Compiler:NiceClass(Class.PointClass), tVar)
+		Prepare = Prepare .. "\n" .. dVar .. " = " ..  Delegate.Inline
+		Prepare = Prepare .. "\n" .. Inline .. ", " .. tVar .. " = " .. dVar .. "(Context " .. Arguments .. ")"
+		Prepare = Prepare .. "\n" .. [[if !]] .. Inline .. [[ then Context:Throw(]] .. Compiler:CompileTrace(Trace) .. [[, "invoke", "Delegate expected to return ]] .. Compiler:NiceClass(Class.PointClass) .. [[ got void.") end]]
+		Prepare = Prepare .. "\n" .. [[if ]] .. tVar .. [[ ~= "]] .. Class.PointClass .. [[" then Context:Throw(]] .. Compiler:CompileTrace(Trace) .. [[, "invoke", "Delegate expected to return ]] .. Compiler:NiceClass(Class.PointClass) .. [[ got " .. EXPADV.TypeName(]] .. tVar .. [[) .. ".") end]]
 
 		return {Trace = Trace, Inline = Inline, Prepare = Prepare, Return = Class.PointClass, FLAG = EXPADV_INLINEPREPARE}
 	end)
@@ -147,9 +147,9 @@ EXPADV.AddGeneratedFunction( nil, "invoke", "d,...", "",
 		local Arguments = ""
 		if #Inputs > 0 then Arguments = "," .. table.concat(Inputs, ",") end
 		
-		Prepare = Prepare .. "\n" .. string.format([[%s = %s]], dVar, Delegate.Inline)
-		Prepare = Prepare .. "\n" .. string.format([[%s, %s = %s(Context %s)]], Inline, tVar, dVar, Arguments)
-		Prepare = Prepare .. "\n" .. string.format([[if %s then Context:Throw(%s, "invoke", "Delegate expected to return void got " .. EXPADV.TypeName(%s) .. ".") end]], Inline, Compiler:CompileTrace(Trace), tVar)
+		Prepare = Prepare .. "\n" .. dVar .. " = " .. Delegate.Inline
+		Prepare = Prepare .. "\n" .. Inline .. ", " .. tVar .. " = " .. dVar .. "(Context " .. Arguments .. ")"
+		Prepare = Prepare .. "\n" .. [[if ]] .. Inline .. [[ then Context:Throw(]] .. Compiler:CompileTrace(Trace) .. [[, "invoke", "Delegate expected to return void got " .. EXPADV.TypeName(]] .. tVar .. [[) .. ".") end]]
 		
 		return {Trace = Trace, Inline = Inline, Prepare = Prepare, Return = "", FLAG = EXPADV_INLINEPREPARE}
 	end)

@@ -231,13 +231,13 @@ function EXPADV.LoadOperators( )
 
 			Operator.Input = Signature
 			Operator.InputCount = TotalInputs
-			Operator.Signature = string_format( "%s(%s)", Operator.Name, table_concat( Signature, "" ) )
+			Operator.Signature = Operator.Name .. "(" .. table_concat( Signature, "" ) .. ")"
 
 			--if Operator.UsesVarg then Operator.InputCount = Operator.InputCount - 1 end
 		else
 			Operator.Input = { }
 			Operator.InputCount = 0
-			Operator.Signature = string_format( "%s()", Operator.Name )
+			Operator.Signature = Operator.Name .. "()"
 		end
 
 		-- Do we still need to load this?
@@ -266,6 +266,7 @@ function EXPADV.LoadOperators( )
 		end --TODO: add user descriptions!
 	end
 
+	Temp_Operators = nil
 	EXPADV.CallHook( "PostLoadOperators" )
 end
 
@@ -358,7 +359,7 @@ local Temp_HelperData = { }
 function EXPADV.AddFunctionHelper( Component, Name, Input, Description )
 	if SERVER then return end
 
-	Temp_HelperData[string_format( "%s(%s)", Name, Input or "" )] = Description
+	Temp_HelperData[ Name .. "(" .. ( Input or "" ) .. ")" ] = Description
 end
 
 /* --- --------------------------------------------------------------------------------
@@ -408,7 +409,7 @@ function EXPADV.LoadFunctions( )
 
 		-- Get Helper Data
 
-		Operator.Description = Temp_HelperData[string_format( "%s(%s)", Operator.Name, Operator.Input or "" )]
+		Operator.Description = Temp_HelperData[ Operator.Name .. "(" .. ( Operator.Input or "" ) .. ")" ]
 
 		-- Second we check the input types, and build our signatures!
 		local ShouldNotLoad = false
@@ -487,7 +488,7 @@ function EXPADV.LoadFunctions( )
 				end
 			end
 			
-			Operator.Signature = string_format( "%s(%s)", Operator.Name, table_concat( Signature, "" ) )
+			Operator.Signature = Operator.Name .. "(" .. table_concat( Signature, "" ) .. ")"
 			if Operator.Method then table_remove( Signature, 2 ) end
 
 			Operator.Input = Signature
@@ -497,7 +498,7 @@ function EXPADV.LoadFunctions( )
 		else
 			Operator.Input = { }
 			Operator.InputCount = 0
-			Operator.Signature = string_format( "%s()", Operator.Name )
+			Operator.Signature = Operator.Name .. "()"
 		end
 
 		-- Do we still need to load this?
@@ -578,7 +579,7 @@ function EXPADV.LoadFunctionAliases( Operator )
 
 		table.Inherit( AliasOperator, Operator )
 
-		EXPADV.Functions[ string_format( "%s(%s)", Alias.Name, table_concat( Signature, "" ) ) ] = AliasOperator
+		EXPADV.Functions[ Alias.Name .. "(" .. table_concat( Signature, "" ) .. ")" ] = AliasOperator
 	end
 end
 
@@ -694,25 +695,25 @@ function EXPADV.BuildVMOperator( Operator )
 
 				elseif _type == "string" then
 
-					Arguments[I] = string_format( "{%q,%q}", Instruction, "s" )
+					Arguments[I] = "{\"" .. Instruction .. "\",\"s\"}"
 
 				elseif _type == "number" then
 
-					Arguments[I] = string_format( "{%i,%q}", Instruction, "n" )
+					Arguments[I] = "{" .. Instruction .. ",\"n\"}"
 
 				elseif Instruction.FLAG == EXPADV_FUNCTION then
 					error( "Compiler is yet to support virtuals" )
 
 				elseif Instruction.FLAG == EXPADV_INLINE then
 
-					Arguments[I] = (Instruction.Return ~= "...") and string_format( "{%s,%q}", Instruction.Inline, Instruction.Return ) or Instruction.Inline
+					Arguments[I] = (Instruction.Return ~= "...") and ( "{" .. Instruction.Inline .. ",\"" .. Instruction.Return .. "\"}" ) or Instruction.Inline
 
 				elseif Instruction.FLAG == EXPADV_PREPARE then
 
 					Prepare[ #Prepare + 1 ] = Instruction.Prepare
 
 				else
-					Arguments[I] = (Instruction.Return ~= "...") and string_format( "{%s,%q}", Instruction.Inline, Instruction.Return ) or Instruction.Inline
+					Arguments[I] = (Instruction.Return ~= "...") and ( "{" .. Instruction.Inline .. ",\"" .. Instruction.Return .. "\"}" ) or Instruction.Inline
 
 					Prepare[ #Prepare + 1 ] = Instruction.Prepare
 				end
@@ -730,7 +731,7 @@ function EXPADV.BuildVMOperator( Operator )
 		
 		local InlineArgs = #Arguments >= 1 and table_concat( Arguments, "," ) or "nil"
 
-		local Inline = string_format( "Context.Instructions[%i]( Context, %s, %s )", ID, Compiler:CompileTrace( Trace ), InlineArgs )
+		local Inline = "Context.Instructions[" .. ID .. "]( Context, " .. Compiler:CompileTrace( Trace ) .. ", " .. InlineArgs .. " )"
 	
 		local Instruction = Compiler:NewLuaInstruction( Trace, Operator, table_concat( Prepare, "\n" ), Inline )
 		
@@ -810,7 +811,7 @@ function EXPADV.BuildLuaOperator( Operator )
 				-- Lets see if we need to localize the inline
 				if Uses >= 2 and !Input.IsRaw and !string_StartWith( InputInline, "Context.Definitions" ) then
 					local Defined = Compiler:DefineVariable( )
-					InputPrepare = string_format( "%s\n%s = %s", InputPrepare, Defined, InputInline )
+					InputPrepare = InputPrepare .. "\n" .. Defined .. " = " .. InputInline
 					InputInline = Defined
 				end
 			end
@@ -818,23 +819,23 @@ function EXPADV.BuildLuaOperator( Operator )
 			-- Place inputs into generated code
 			if Operator.FLAG == EXPADV_PREPARE or Operator.FLAG == EXPADV_INLINEPREPARE then
 				OpPrepare = string_gsub( OpPrepare, "@value " .. I, InputInline )
-				OpPrepare = string_gsub( OpPrepare, "@type " .. I, Format( "%q", InputReturn or Operator.Input[I] or "void" ) )
+				OpPrepare = string_gsub( OpPrepare, "@type " .. I, "\"" .. ( InputReturn or Operator.Input[I] or "void" ) .. "\"" )
 			end
 
 			if Operator.FLAG == EXPADV_INLINE or Operator.FLAG == EXPADV_INLINEPREPARE then
 				OpInline = string_gsub( OpInline, "@value " .. I, InputInline )
-				OpInline = string_gsub( OpInline, "@type " .. I, Format( "%q", InputReturn or Operator.Input[I] ) )
+				OpInline = string_gsub( OpInline, "@type " .. I, "\"" .. (  InputReturn or Operator.Input[I] ) .. "\"" )
 			end
 
-				if Operator.FLAG == EXPADV_PREPARE or Operator.FLAG == EXPADV_INLINEPREPARE then
-					if string_find( OpPrepare, "@prepare " .. I ) then
-						OpPrepare = string_gsub( OpPrepare, "@prepare " .. I, InputPrepare or "" )
-					else
-						table_insert( Preperation, 1, InputPrepare or "" )
-					end
+			if Operator.FLAG == EXPADV_PREPARE or Operator.FLAG == EXPADV_INLINEPREPARE then
+				if string_find( OpPrepare, "@prepare " .. I ) then
+					OpPrepare = string_gsub( OpPrepare, "@prepare " .. I, InputPrepare or "" )
 				else
 					table_insert( Preperation, 1, InputPrepare or "" )
 				end
+			else
+				table_insert( Preperation, 1, InputPrepare or "" )
+			end
 		end
 
 		-- Now we handel any varargs!
@@ -859,7 +860,7 @@ function EXPADV.BuildLuaOperator( Operator )
 					end
 
 					if Input.Return ~= "..." and Input.Return ~= "_vr" then
-						Inline = string_format( "{%s,%q}", Inline, Input.Return or "NIL" )
+						Inline = "{" .. Inline .. ",\"" .. ( Input.Return or "NIL" ) .. "\"}"
 					end
 
 					VAInline[ #VAInline + 1 ] = Inline
@@ -908,7 +909,7 @@ function EXPADV.BuildLuaOperator( Operator )
 			local Trace = Compiler:CompileTrace( Trace )
 
 			if Uses >= 2 then
-				OpPrepare = string_format( "local Trace = %s\n%s", Trace, OpPrepare or "" )
+				OpPrepare = "local Trace = " .. Trace .. "\n" .. ( OpPrepare or "" )
 				Trace = "Trace"
 			end
 

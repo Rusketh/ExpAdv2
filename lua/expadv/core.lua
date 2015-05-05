@@ -56,7 +56,7 @@ function ToLua( Value, bNoTables, bNoFunctions )
 	if Type == "number" then
 		return Value
 	elseif Type == "string" then
-		return string.format( "%q", Value )
+		return "\"" .. Value .. "\""
 	elseif Type == "boolean" then
 		return Value and "true" or "false"
 	elseif Type == "table" and !bNoTables then
@@ -87,7 +87,7 @@ function ToLuaTable( Table )
 			error("TableToLua invalid Value of type " .. type(Value))
 		end
 		
-		Lua = string.format( "%s[%s] = %s, ", Lua, kLua, vLua )
+		Lua = Lua .. "[" .. kLua .. "] = " .. vLua .. ", "
 	end
 	
 	return Lua .. "}"
@@ -283,11 +283,11 @@ elseif CLIENT then
 		A = string.lower( A )
 
 		if Config.enabledcomponents and Config.enabledcomponents[A] then
-			local AC = { string.format( "expadv %s enable", A ), string.format( "expadv %s disable", A ) }
+			local AC = { "expadv " .. A .. " enable", "expadv " .. A .. " disable" }
 
 			if Config.components[A] then
 				for Key, _ in pairs( Config.components[A] ) do
-					AC[#AC + 1] = string.format( "expadv %s %s", A, Key )
+					AC[#AC + 1] = "expadv " .. A .. " " .. Key
 				end
 			end
 

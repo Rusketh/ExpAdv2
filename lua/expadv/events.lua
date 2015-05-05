@@ -120,11 +120,11 @@ function EXPADV.LoadEvents( )
 
 			Event.Input = Signature
 			Event.InputCount = #Signature
-			Event.Signature = string.format( "%s(%s)", Event.Name, table.concat( Signature, "" ) )
+			Event.Signature = Event.Name .. "(" .. table.concat( Signature, "" ) .. ")"
 		else
 			Event.Input = { }
 			Event.InputCount = 0
-			Event.Signature = string.format( "%s()", Event.Name )
+			Event.Signature = Event.Name .. "()"
 		end
 
 		-- Do we still need to load this?

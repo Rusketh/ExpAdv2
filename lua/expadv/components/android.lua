@@ -27,7 +27,7 @@ end )
 function Component:OnPostLoadFeatures()
 	EXPADV.ClientOperators()
 	for Feature, Data in pairs(EXPADV.Features) do
-		self:AddPreparedFunction("request" .. Feature, "", "", string.format("Context.Data.Features[%q] = true", Feature))
+		self:AddPreparedFunction("request" .. Feature, "", "", "Context.Data.Features[\"" .. Feature .. "\"] = true")
 	end
 end
 

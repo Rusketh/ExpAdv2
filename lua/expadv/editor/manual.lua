@@ -554,7 +554,7 @@ function EXPADV.Editor.OpenHelper( )
 
 			local Page = Frame:GetComponentPanel( Operator.Component )
 
-			local Signature = string.format( "%s(%s)", Operator.Name, NamePerams( Operator.Input, Operator.InputCount, Operator.UsesVarg ) )
+			local Signature = Operator.Name .. "(" .. NamePerams( Operator.Input, Operator.InputCount, Operator.UsesVarg ) .. ")"
 				
 			Page:GetFunctionSheet( ):AddLine( GetAvalibility(Operator), EXPADV.TypeName( Operator.Return or "" ) or "Void", Signature, Operator.Description )
 			BrowserSheet:GetFunctionSheet( ):AddLine( GetAvalibility(Operator), EXPADV.TypeName( Operator.Return or "" ) or "Void", Signature, Operator.Description )
@@ -566,7 +566,7 @@ function EXPADV.Editor.OpenHelper( )
 			local ClassPage = Frame:GetClassPanel( Operator.Input[1] )
 
 			local Inputs = table.Copy( Operator.Input )
-			local Signature = string.format( "%s.%s(%s)", EXPADV.TypeName( table.remove( Inputs, 1 ) ), Operator.Name, NamePerams( Inputs, Operator.InputCount, Operator.UsesVarg ) )
+			local Signature = EXPADV.TypeName( table.remove( Inputs, 1 ) ) .. "." .. Operator.Name .. "(" .. NamePerams( Inputs, Operator.InputCount, Operator.UsesVarg ) .. ")"
 				
 			ClassPage:GetMethodSheet( ):AddLine( GetAvalibility(Operator), EXPADV.TypeName( Operator.Return or "" ) or "Void", Signature, Operator.Description )	
 			BrowserSheet:GetMethodSheet( ):AddLine( GetAvalibility(Operator), EXPADV.TypeName( Operator.Return or "" ) or "Void", Signature, Operator.Description )	
@@ -582,7 +582,7 @@ function EXPADV.Editor.OpenHelper( )
 		for _, Event in pairs( EXPADV.Events ) do
 			local Page = Frame:GetComponentPanel( Event.Component )
 
-			local Signature = string.format( "%s(%s)", Event.Name, NamePerams( Event.Input, Event.InputCount, false ) )
+			local Signature = Event.Name .. "(" .. NamePerams( Event.Input, Event.InputCount, false ) .. ")"
 						
 			Page:GetEventSheet( ):AddLine( GetAvalibility(Event), EXPADV.TypeName( Event.Return or "" ) or "Void", Signature, Event.Description or "N/A" )		
 			BrowserSheet:GetEventSheet( ):AddLine( GetAvalibility(Event), EXPADV.TypeName( Event.Return or "" ) or "Void", Signature, Event.Description or "N/A" )		

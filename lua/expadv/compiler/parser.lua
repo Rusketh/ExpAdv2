@@ -479,12 +479,12 @@ function Compiler:Expression_13( Trace )
 		local Expression = self:Expression_1( Trace )
 		
 		if Expression.FLAG == EXPADV_INLINE or Expression.FLAG == EXPADV_INLINEPREPARE then
-			Expression.Inline = string.format( "(%s)", Expression.Inline )
+			Expression.Inline = "(" .. Expression.Inline .. ")"
 		end
 
 		self:RequireToken( "rpa", "Right parenthesis ( )) missing, to close grouped equation." )
 
-		Expression.Inline = string.format( "(%s)", Expression.Inline )
+		Expression.Inline = "(" .. Expression.Inline .. ")"
 		
 		return self:Expression_17( Trace, Expression )
 	end
@@ -498,12 +498,12 @@ function Compiler:GetGroupedOrValue( Trace )
 		local Expression = self:Expression_1( Trace )
 		
 		if Expression.FLAG == EXPADV_INLINE or Expression.FLAG == EXPADV_INLINEPREPARE then
-			Expression.Inline = string.format( "(%s)", Expression.Inline )
+			Expression.Inline = "(" .. Expression.Inline .. ")"
 		end
 
 		self:RequireToken( "rpa", "Right parenthesis ( )) missing, to close grouped equation." )
 
-		Expression.Inline = string.format( "(%s)", Expression.Inline )
+		Expression.Inline = "(" .. Expression.Inline .. ")"
 		
 		return self:Expression_17( Trace, Expression )
 	end
@@ -1371,7 +1371,7 @@ function Compiler:Statement_7( Trace )
 
 		self:PrepareInline( Sequence )
 
-		Sequence.Prepare = string.format( "if SERVER then\n%s\nend", Sequence.Prepare )
+		Sequence.Prepare = "if SERVER then\n" .. Sequence.Prepare .. "\nend"
 
 		self.IsClientScript = true
 			
@@ -1393,7 +1393,7 @@ function Compiler:Statement_7( Trace )
 
 		self:PrepareInline( Sequence )
 
-		Sequence.Prepare = string.format( "if CLIENT then\n%s\nend", Sequence.Prepare )
+		Sequence.Prepare = "if CLIENT then\n" .. Sequence.Prepare .. "\nend"
 		
 		self.IsServerScript = true
 			
