@@ -753,7 +753,7 @@ if CLIENT then
 	end )
 
 	hook.Add( "PostDrawOpaqueRenderables", "expadv.postdraw", function( DrawingDepth, DrawingSkybox )
-		if !EXPADV.IsLoaded or bDrawingDepth or bDrawingSkybox then return end
+		if !EXPADV.IsLoaded or DrawingDepth or DrawingSkybox then return end
 
 		if Component.InRender or Component.DrawingSkybox then return end
 
