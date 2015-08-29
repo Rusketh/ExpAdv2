@@ -129,6 +129,9 @@ Component:AddInlineFunction( "getRoll", "a:", "n", "@value 1.r" )
 Component:AddFunctionHelper( "getRoll", "a:", "Gets the roll value of an angle" )
 
 --SETTERS
+Component:AddPreparedFunction( "set", "a:a", "a", "@value 1.Set(@value 2)", "(@value 1)" )
+Component:AddFunctionHelper( "set", "a:a", "Sets the pitch value of an angle" )
+
 Component:AddPreparedFunction( "setPitch", "a:n", "a", "@value 1.p = @value 2", "(@value 1)" )
 Component:AddFunctionHelper( "setPitch", "a:n", "Sets the pitch value of an angle" )
 
@@ -139,14 +142,14 @@ Component:AddPreparedFunction( "setRoll", "a:n", "a", "@value 1.r = @value 2", "
 Component:AddFunctionHelper( "setRoll", "a:n", "Sets the roll value of an angle" )
 
 --Changers
-Component:AddPreparedFunction( "withX", "a:n", "a", "Angle(@value 2, @value 1.y, @value 1.r)" )
-Component:AddFunctionHelper( "withX", "a:n", "Returns the value of the angle with the value of pitch changed." )
+Component:AddPreparedFunction( "withPitch", "a:n", "a", "Angle(@value 2, @value 1.y, @value 1.r)" )
+Component:AddFunctionHelper( "withPitch", "a:n", "Returns the value of the angle with the value of pitch changed." )
 
-Component:AddPreparedFunction( "withY", "a:n", "a", "Angle(@value 1.p, @value 2, @value 1.r)" )
-Component:AddFunctionHelper( "withY", "a:n", "Returns the value of the angle with the value of yaw changed." )
+Component:AddPreparedFunction( "withYaw", "a:n", "a", "Angle(@value 1.p, @value 2, @value 1.r)" )
+Component:AddFunctionHelper( "withYaw", "a:n", "Returns the value of the angle with the value of yaw changed." )
 
-Component:AddPreparedFunction( "withZ", "a:n", "a", "Angle(@value 1.p, @value 1.y, @value 2)" )
-Component:AddFunctionHelper( "withZ", "a:n", "Returns the value of the angle with the value of roll changed." )
+Component:AddPreparedFunction( "withRoll", "a:n", "a", "Angle(@value 1.p, @value 1.y, @value 2)" )
+Component:AddFunctionHelper( "withRoll", "a:n", "Returns the value of the angle with the value of roll changed." )
 
 Component:AddPreparedFunction( "clone", "a:", "a", "Angle(@value 1.p, @value 1.y, @value 1.r)" )
 Component:AddFunctionHelper( "clone", "a:", "Returns a clone of the vector." )

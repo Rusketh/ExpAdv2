@@ -191,6 +191,9 @@ EXPADV.ServerOperators()
 Component:AddPreparedFunction( "setPos", "e:v", "", "if(IsValid(@value 1) && EXPADV.PPCheck(Context,@value 1)) then @value 1:SetPos(@value 2) end")
 Component:AddFunctionHelper( "setPos", "e:v", "Sets the position of the given entity.")
 
+Component:AddPreparedFunction( "setVel", "e:v", "", "if(IsValid(@value 1) && EXPADV.PPCheck(Context,@value 1)) then if(IsValid(@value 1:GetPhysicsObject())) then @value 1:GetPhysicsObject():SetVelocity(@value 2) else @value 1:SetVelocity(@value 2) end end")
+Component:AddFunctionHelper( "setVel", "e:v", "Sets the velocity of the given entity.")
+
 Component:AddPreparedFunction( "setAng", "e:a", "", "if(IsValid(@value 1) && EXPADV.PPCheck(Context,@value 1)) then @value 1:SetAngles(@value 2) end")
 Component:AddFunctionHelper( "setAng", "e:a", "Sets the angle of the given entity.")
 
@@ -226,6 +229,7 @@ Component:AddFunctionHelper( "setFriction", "e:n", "Sets how much friction an en
 
 Component:AddPreparedFunction( "setGravity", "e:n", "", "if(IsValid(@value 1) && EXPADV.PPCheck(Context, @value 1)) then @value 1:SetGravity(@value 2) end")
 Component:AddFunctionHelper( "setGravity", "e:n", "Sets the gravity multiplier of the entity.")
+
 
 /* --- --------------------------------------------------------------------------------
 	@: VEHICLES
@@ -1031,6 +1035,165 @@ Component:AddFunctionHelper( "getBoneAng", "e:n", "Gets the angle of bone N on e
 Component:AddFunctionHelper( "getBoneScale", "e:n", "Gets the scale of bone N on entity." )
 Component:AddFunctionHelper( "boneCount", "e:", "Returns the ammount of bones of a entity." )
 Component:AddFunctionHelper( "boneParent", "e:n", "The bode ID of the bone to get parent of." )
+
+/* --- --------------------------------------------------------------------------------
+	@: Read Write values
+   --- */
+EXPADV.SharedEvents( )
+Component:AddEvent( "networkVarChanged", "e,s", "" )
+EXPADV.AddEventHelper("networkVarChanged","Called when a networked variable is changed")
+if SERVER then
+	util.AddNetworkString("expadv.networkvars")
+	util.AddNetworkString("expadv.registernetworkvars")
+end
+net.Receive("expadv.networkvars", function(len,ply)
+	local Ent=net.ReadEntity()
+	if !IsValid(Ent) then return end
+	Ent.expadv2vars=Ent.expadv2vars or {} 
+	local Name=net.ReadString()
+	local Old=Ent.expadv2vars[Name]
+	Ent.expadv2vars[Name]=EXPADV.ClassShorts[net.ReadString()].ReadFromNet()
+	EXPADV.CallEvent( "networkVarChanged", Ent,Name)
+end)
+net.Receive("expadv.registernetworkvars", function(len,ply)
+	local Ent=net.ReadEntity()
+	if !IsValid(Ent) then return end
+	Ent.expadv2vars=Ent.expadv2vars or {} 
+	local Name=net.ReadString()
+	local Old=Ent.expadv2vars[Name]
+	Ent.expadv2vars[Name]=EXPADV.ClassShorts[net.ReadString()].ReadFromNet()
+	EXPADV.CallEvent( "networkVarChanged", Ent,Name)
+end)
+EXPADV.SharedOperators()
+
+function Component:OnPostRegisterClass( Name, Class )
+	if !Class.WriteToNet then return end
+	if !Class.LoadOnClient then
+		EXPADV.ServerOperators( )
+	elseif !Class.LoadOnServer then
+		EXPADV.ClientOperators( )
+	else EXPADV.SharedOperators( ) end
+	Component:AddPreparedFunction( "setNetwork"..Name:gsub("^%l", string.upper), "e:s,"..Class.Short..",b", "",
+	[[if(IsValid(@value 1) && EXPADV.PPCheck(Context, @value 1)) then 
+		@value 1.expadv2vars=@value 1.expadv2vars or {} 
+		if @value 1.expadv2vars[@value 2] != @value 3 then 
+			@value 1.expadv2vars[@value 2]=@value 3
+			if @value 4 then
+				$net.Start("expadv.networkvars")
+				$net.WriteEntity(@value 1)
+				$net.WriteString(@value 2)
+				$net.WriteString("]]..Class.Short..[[")
+				EXPADV.ClassShorts["]]..Class.Short..[["].WriteToNet(@value 3)
+				
+				if $SERVER then
+					$net.Broadcast()
+				else
+					$net.SendToServer()
+				end
+			end
+		end
+	end]])
+	Component:AddFunctionHelper( "setNetwork"..Name:gsub("^%l", string.upper), "e:s,"..Class.Short..",b", "Stores a variable inside the entity, optionally syncing it with the client")
+
+	Component:AddPreparedFunction( "getNetwork"..Name:gsub("^%l", string.upper), "e:s", Class.Short, 
+		[[if IsValid(@value 1) and @value 1.expadv2vars then 
+			@define val = @value 1.expadv2vars[@value 2] 
+			@define def = EXPADV.ClassShorts["]]..Class.Short..[["].DefaultObject
+		end]], "@val or @def")
+	Component:AddFunctionHelper( "getNetwork"..Name:gsub("^%l", string.upper), "e:s", "Reads variable from the entity")
+end
+
+Component:AddPreparedFunction( "removeVariable", "e:s", "", "if IsValid(@value 1) and @value 1.expadv2vars then @value 1.expadv2vars[@value 2] end")
+Component:AddFunctionHelper( "removeVariable", "e:s", "Removes variable from the entity")
+
+/* --- --------------------------------------------------------------------------------
+	@: Collision callback
+   --- */
+   
+local registered_ents = {}
+hook.Add("EntityRemoved", "Expav.Event",function (ent)
+	registered_ents[ent]=nil
+end)
+
+local function entitiesCollide(ent,data)
+	for i=1,#registered_ents[ent],1 do
+		context=registered_ents[ent][i]
+		conData=context.Data
+		if !IsValid(context.entity) then
+			table.remove(registered_ents[ent],i)
+			i=i-1
+		else
+			if (conData.collFilter and CurTime()==conData.collPreviousTick[ent]) or (conData.collIgnoreConstrained and table.HasValue(constraint.GetAllConstrainedEntities(ent),data.HitEntity)) then return end
+			context:Execute("collisioncall",conData.collDlg[ent],{ ent, "e"},{data.HitEntity,"e"},{data.PhysObject,"p"},
+			{data.HitObject,"p"},{data.OurOldVelocity,"v"},{data.TheirOldVelocity,"v"},{data.HitPos,"v"},{data.Speed,"n"},
+			{data.HitNormal,"v"},{data.DeltaTime,"n"})
+			conData.collPreviousTick[ent]=CurTime()
+		end
+	end
+end
+
+EXPADV.SharedOperators()
+
+Component:AddVMFunction( "addCollCallback", "e:d", "", function(context, trace, ent,delegate)
+	local data=context.Data
+	if data.colProps == nil then data.colProps=0 end
+	if data.collFilter == nil then data.collFilter=true end
+	if data.collIgnoreConstrained == nil then data.collIgnoreConstrained=true end
+	if !IsValid(ent) or data.colProps > Component:ReadSetting( "maxcollclk", 100 ) or (Component:ReadSetting( "collallow", 1 ) ==0 and !EXPADV.PPCheck(context, ent)) then return end
+	
+	if registered_ents[ent]==nil then
+		registered_ents[ent]={}
+		if ent.PhysicsCollide then
+			ent.PhysicsCollide=function(sel,data,collider)
+				entitiesCollide(ent,data)
+			end
+		else
+			ent:AddCallback("PhysicsCollide",entitiesCollide)
+		end
+	end
+	data.collPreviousTick=data.collPreviousTick or {}
+	data.collDlg = data.collDlg or {}
+	data.collDlg[ent]=delegate
+	if !table.HasValue(registered_ents[ent],context) then
+		table.insert(registered_ents[ent],context)
+		data.colProps=data.colProps+1
+	else return end
+end)
+
+Component:AddVMFunction( "removeCollCallback", "e:", "", function(context, trace, ent)
+	if !registered_ents[ent] then return end
+	for i=1,#registered_ents[ent],1 do
+		if registered_ents[ent][i] == context then
+			table.remove(registered_ents[ent],i)
+			context.Data.colProps=context.Data.colProps-1
+			return
+		end
+	end
+end)
+Component:AddVMFunction( "removeAllCollCallback", "", "", function(context, trace)
+	for ent, gates in pairs(registered_ents) do
+		for i=1,#gates,1 do
+			if gates[i] == context then
+				table.remove(gates,i)
+				context.Data.colProps=context.Data.colProps-1
+				break
+			end
+		end
+	end
+	
+end)
+Component:AddVMFunction( "hasCollDetection", "e:", "b", function(context, trace, ent)
+	return registered_ents[ent]
+	
+end)
+Component:AddPreparedFunction( "collIgnoreConstrained", "b", "", "Context.Data.collIgnoreConstrained=@value 1")
+Component:AddPreparedFunction( "collFilter", "b", "", "Context.Data.collFilter=@value 1")
+Component:AddFunctionHelper( "addCollCallback", "e:d", "Calls delegate when the entity collidies. Delegate parameters: our entity, hit entity, our physObj, hit physObj, our old velocity, hit old velocity, hit pos, entity speed, hit normal, delta time")
+Component:AddFunctionHelper( "removeCollCallback", "e:", "Remove collision detection on this entity")
+Component:AddFunctionHelper( "collIgnoreConstrained", "b", "All collisions with constrained entities will be ignored. True by default")
+Component:AddFunctionHelper( "collFilter", "b", "Register only 1 collision per tick. True by default")
+Component:AddFunctionHelper( "removeAllCollCallback", "", "Remove all collision callbacks from this gate")
+Component:AddFunctionHelper( "hasCollDetection", "e:", "Checks if this entity detects collisions")
 
 /* --- --------------------------------------------------------------------------------
 	@: Entity Events

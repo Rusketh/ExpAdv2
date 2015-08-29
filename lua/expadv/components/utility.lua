@@ -882,6 +882,16 @@ if IsValid( @value 1 ) and EXPADV.PPCheck(Context, @value 1 ) then
 	end
 end]] )
 
+PropComponent:AddPreparedFunction( "setVel", "e:v", "", [[
+if(IsValid(@value 1) && EXPADV.PPCheck(Context,@value 1)) then
+	if(IsValid(@value 1:GetPhysicsObject())) then
+		@value 1:GetPhysicsObject():SetVelocity(@value 2) 
+	else 
+		@value 1:SetVelocity(@value 2) 
+	end 
+end]])
+
+
 PropComponent:AddPreparedFunction( "setAng", "e:a", "",[[
 if IsValid( @value 1 ) and EXPADV.PPCheck(Context, @value 1 ) then
 	if !( @value 2.p ~= @value 2.p or @value 2.y ~= @value 2.y or @value 2.r ~= @value 2.r ) then
@@ -994,6 +1004,7 @@ PropComponent:AddFunctionHelper( "dealDamage", "e:n", "Deals damage to an entity
 PropComponent:AddFunctionHelper( "enableGravity", "p:b", "Enables gravity on physics object P." )
 PropComponent:AddFunctionHelper( "spawnedProps", "", "Returns an array of props spawned by this chip." )
 PropComponent:AddFunctionHelper( "setPhysProp", "e:s,b", "Enables/disables physical property S." )
+PropComponent:AddFunctionHelper( "setVel", "e:v", "Sets the velocity of the given entity.")
 
 /* --- --------------------------------------------------------------------------------
 	@: VON support

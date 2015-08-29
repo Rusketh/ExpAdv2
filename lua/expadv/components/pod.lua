@@ -131,32 +131,8 @@ end)
 	@: EyePod
    --- */
 
-EXPADV.ClientEvents( )
-Component:AddEvent( "driverCaculateEyes", "ply,a", "a" )
-
 EXPADV.SharedEvents( )
 Component:AddEvent( "eyePod", "ply,v2", "v2" )
-
-if CLIENT then
-	hook.Add("CreateMove", "ExpAdv.EyePod", function(ucmd)
-		local Ply = LocalPlayer()
-		if !Ply:InVehicle() then return end
-
-		local Pod = Ply:GetVehicle()
-		if !IsValid(Pod) then return end
-
-		for _, Context in pairs( EXPADV.CONTEXT_REGISTERY ) do
-			if !Context.Online or !IsValid(Context.entity) then continue end
-			if !Context.entity.GetLinkedPod or Context.entity:GetLinkedPod() ~= Pod then continue end
-
-			local Ok, Result, ResultType = Context.entity:CallEvent( "driverCaculateEyes", Ply, ucmd:GetViewAngles() )
-			if !Ok or !Result or ResultType ~= "a" then continue end
-			
-			ucmd:SetViewAngles(Result)
-			return
-		end
-	end)
-end
 
 hook.Add("SetupMove", "ExpAdv.EyePod", function(Ply, MoveData)
 	if !Ply or !Ply:InVehicle() then return end
@@ -179,3 +155,30 @@ hook.Add("SetupMove", "ExpAdv.EyePod", function(Ply, MoveData)
 		return 
 	end
 end)
+
+/* --- --------------------------------------------------------------------------------
+	@: Vehicle Camera
+   --- */
+   
+EXPADV.ClientEvents( )
+Component:AddEvent( "driverCamera", "ply,v,a,n", "n" )
+
+if CLIENT then
+	hook.Add("CalcVehicleView", "ExpAdv.DriverCamera", function(Pod,Ply,View)
+		for _, Context in pairs( EXPADV.CONTEXT_REGISTERY ) do
+			if !Context.Online or !IsValid(Context.entity) then continue end
+			if !Context.entity.GetLinkedPod or Context.entity:GetLinkedPod() ~= Pod then continue end
+
+			local Ok, Result, ResultType = Context.entity:CallEvent( "driverCamera", Ply, View.origin, View.angles, View.fov)
+			
+			if ResultType == "n" then
+				View.fov=Result
+			end
+			
+			return View
+		end
+		return View
+	end)
+end
+
+EXPADV.AddEventHelper("driverCamera","Allows you to control driver's camera, you cannot change vec/ang, use set function instead, you can return a number to set FoV")
