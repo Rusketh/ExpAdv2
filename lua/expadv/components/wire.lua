@@ -204,6 +204,9 @@ Component:AddVMFunction( "linkWireIO", "e,s,e,s,t", "b", function(Context, Trace
 	
 	if !IsValid(Dst) or !WireLib.HasPorts(Dst) or !Dst.Inputs then Context.Throw( Trace, "linkWireIO", tostring( Dst ) .." has no wire inputs" ) end
 	if !IsValid(Src) or !WireLib.HasPorts(Src) or !Src.Outputs then Context.Throw( Trace, "linkWireIO", tostring( Src ) .." has no wire outputs" ) end
+
+	if !EXPADV.PPCheck( Context, Dst ) || !EXPADV.PPCheck( Context, Src ) then return end
+
 	local input = Dst.Inputs[DstId]
 	if !input then Context.Throw( Trace, "linkWireIO", tostring( Dst ) .." has no `".. DstId .."` input" ) end
 	local output = Src.Outputs[SrcId]
