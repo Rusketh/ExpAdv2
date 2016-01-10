@@ -35,8 +35,9 @@ function PANEL:Init( )
 	self:SetMinWidth( 600 )
 	self:SetMinHeight( 400 )
 	self:SetText( "Expression Advanced Editor" )
-	self:SetSize( cookie.GetNumber( "eaeditor_w", math.min( 1000, ScrW( ) * 0.8 ) ), cookie.GetNumber( "eaeditor_h", math.min( 800, ScrH( ) * 0.8 ) ) )
-	self:SetPos( cookie.GetNumber( "eaeditor_x", ScrW( ) / 2 - self:GetWide( ) / 2 ), cookie.GetNumber( "eaeditor_y", ScrH( ) / 2 - self:GetTall( ) / 2 ) )
+	
+	self:SetSize( EXPADV.ReadUserSetting( "editor_w", math.min( 1000, ScrW( ) * 0.8 ) ), EXPADV.ReadUserSetting( "editor_h", math.min( 800, ScrH( ) * 0.8 ) ) )
+	self:SetPos( math.Clamp( EXPADV.ReadUserSetting( "editor_x", ScrW( ) / 2 - self:GetWide( ) / 2 ), 0, ScrW( ) - 20 ), EXPADV.ReadUserSetting( "editor_y", ScrH( ) / 2 - self:GetTall( ) / 2 ) )
 
 	self.ExitSave = self:Add( "EA_ImageButton" )
 	self.ExitSave:SetMaterial(Material("fugue/disk.png"))
@@ -142,6 +143,7 @@ function PANEL:Init( )
 		local Code = self:GetCode( )
 		if Code == "" then return end
 		file.Write( "expadv2/_shutdown_.txt", Code )
+		self:SaveCoords( )
 	end )
 	
 	file.CreateDir( "expadv2" )
@@ -150,6 +152,14 @@ function PANEL:Init( )
 	self.__nMicAlpha = 0
 
 	timer.Create( "expadv.editor.validator", 1, 0, function( ) self:ResumeValidator( ) end )
+end
+
+function PANEL:SaveCoords( )
+	EXPADV.CL_Settings.settings["editor_x"] = self.x
+	EXPADV.CL_Settings.settings["editor_y"] = self.y
+	EXPADV.CL_Settings.settings["editor_w"] = self:GetWide()
+	EXPADV.CL_Settings.settings["editor_h"] = self:GetTall()
+	EXPADV.SaveConfig( )
 end
 
 function PANEL:SetCode( Code, Tab )
@@ -554,10 +564,7 @@ function PANEL:Close( )
 	self:SaveTabs( )
 	self:AutoSave( )
 	
-	cookie.Set( "eaeditor_x", self.x )
-	cookie.Set( "eaeditor_y", self.y )
-	cookie.Set( "eaeditor_w", self:GetWide( ) )
-	cookie.Set( "eaeditor_h", self:GetTall( ) )
+	self:SaveCoords( )
 	
 	self:SetVisible( false )
 	if ValidPanel( EXPADV.Helper ) and EXPADV.Helper:IsVisible( ) then
