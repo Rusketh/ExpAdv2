@@ -232,7 +232,7 @@ function linkWireIO( Dst, DstId, Src, SrcId, Path ) -- Baked: unified global fun
 	WireLib.TriggerInput( Dst, DstId, output.Value )
 end
 
-function EXPADV.linkWireIO( Context, Trace, Dst, DstId, Src, SrcId, Path ) -- Do linkWireIO with some tests
+function EXPADV.linkWireIO( Context, Trace, Dst, DstId, Src, SrcId, Path )
 	if !IsValid(Dst) or !WireLib.HasPorts(Dst) or !Dst.Inputs then Context.Throw( Trace, "linkWireIO", tostring( Dst ) .." has no wire inputs" ) end
 	if !IsValid(Src) or !WireLib.HasPorts(Src) or !Src.Outputs then Context.Throw( Trace, "linkWireIO", tostring( Src ) .." has no wire outputs" ) end
 	if !Dst.Inputs[DstId] then Context.Throw( Trace, "linkWireIO", tostring( Dst ) .." has no `".. DstId .."` input" ) end
@@ -243,8 +243,8 @@ function EXPADV.linkWireIO( Context, Trace, Dst, DstId, Src, SrcId, Path ) -- Do
 	return true
 end
 
-Component:AddVMFunction( "linkWireIO", "e,s,e,s", "b", function( Context, Trace, Dst, DstId, Src, SrcId ) return EXPADV.linkWireIO( Context, Trace, Dst, DstId, Src, SrcId ) end )
-Component:AddVMFunction( "linkWireIO", "e,s,e,s,t", "b", function( Context, Trace, Dst, DstId, Src, SrcId, Path ) return EXPADV.linkWireIO( Context, Trace, Dst, DstId, Src, SrcId, Path ) end )
+Component:AddVMFunction( "linkWireIO", "e,s,e,s", "b", EXPADV.linkWireIO )
+Component:AddVMFunction( "linkWireIO", "e,s,e,s,t", "b", EXPADV.linkWireIO )
 
 /* --- --------------------------------------------------------------------------------
 	@: Helpers
@@ -257,8 +257,8 @@ Component:AddFunctionHelper( "outputType", "wl:s", "Returns the wiretype of an o
 Component:AddFunctionHelper( "hasInput", "wl:s", "Returns true if the linked component has an input of the specified name." )
 Component:AddFunctionHelper( "isHiSpeed", "wl:", "Returns true if the wirelinked object supports the HiSpeed interface. See wiremod wiki for more information." )
 Component:AddFunctionHelper( "inputType", "wl:s", "Returns the wiretype of an input on the linked component." )
-Component:AddFunctionHelper( "linkWireIO", "e,s,e,s", "Wires input of first entity to output of second. 1st string - input, 2nd - output name. Returns true on success." )
-Component:AddFunctionHelper( "linkWireIO", "e,s,e,s,t", "Wires input of first entity to output of second. 1st string - input, 2nd - output name. 5th argument of type `table` must be a wiring path. Returns true on success." )
+Component:AddFunctionHelper( "linkWireIO", "e,s,e,s", "Wires input of first `entity` to output of second. 1st `string` - input, 2nd - output name. Returns true on success." )
+Component:AddFunctionHelper( "linkWireIO", "e,s,e,s,t", "Wires input of first `entity` to output of second. 1st `string` - input, 2nd - output name. `table` must be a wiring path. Returns true on success." )
 
 /* --- --------------------------------------------------------------------------------
 	@: Events
