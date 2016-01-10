@@ -889,6 +889,11 @@ function PANEL:_OnKeyCodeTyped( code )
 					break 
 				end 
 			end
+		elseif code == KEY_RBRACKET then
+			if shift then
+				local Caret = self.Caret:Clone( )
+				if string.Replace( self.Rows[Caret.x], " ", "" ) == "" then code = KEY_TAB end
+			end
 		end 
 	end
 	
