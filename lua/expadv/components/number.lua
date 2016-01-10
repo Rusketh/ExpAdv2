@@ -394,8 +394,11 @@ Component:AddFunctionHelper( "log10", "n", "Returns the logarithm of (number) to
 Component:AddInlineFunction( "log", "n,n", "n", "(math.log(@value 1) / math.log(@value 2))" )
 Component:AddFunctionHelper( "log", "n,n", "Returns the logarithm of (number) to base (number)." )
 
-Component:AddInlineFunction("mix", "n,n,n", "n", "(@value 1 * @value 3 + @value 2 * (1 - @value 3))" )
+Component:AddInlineFunction( "mix", "n,n,n", "n", "(@value 1 * @value 3 + @value 2 * (1 - @value 3))" )
 Component:AddFunctionHelper( "mix", "n,n,n", "Returns a linear interpolation between three numbers." )
+
+Component:AddInlineFunction( "sign", "n", "n", "(( @value 1 > 0 ) and 1 or (( @value 1 < 0 ) and -1 or 0))" )
+Component:AddFunctionHelper( "sign", "n", "Returns sign of the number: -1, 0, 1." )
 
 /* --- --------------------------------------------------------------------------------
     @: Loop
