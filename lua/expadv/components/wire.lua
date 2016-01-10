@@ -198,24 +198,16 @@ end
 Component:AddVMFunction( "writeStringZero", "wl:n,s", "n", WriteStringZero )
 Component:AddVMFunction( "readStringZero", "wl:n", "s", ReadStringZero )
 
-Component:AddVMFunction( "linkWireIO", "e,s,e,s,t", "b", function(Context, Trace, Dst, DstId, Src, SrcId, Path)
+function linkWireIO( Dst, DstId, Src, SrcId, Path ) -- Baked: unified global function that can be then used in the whole code
 	/* Modified version:
 		local function Wire_Link - as spotted in lua/wire/server/wirelib.lua */
-	
-	if !IsValid(Dst) or !WireLib.HasPorts(Dst) or !Dst.Inputs then Context.Throw( Trace, "linkWireIO", tostring( Dst ) .." has no wire inputs" ) end
-	if !IsValid(Src) or !WireLib.HasPorts(Src) or !Src.Outputs then Context.Throw( Trace, "linkWireIO", tostring( Src ) .." has no wire outputs" ) end
-
-	if !EXPADV.PPCheck( Context, Dst ) || !EXPADV.PPCheck( Context, Src ) then return end
 
 	local input = Dst.Inputs[DstId]
-	if !input then Context.Throw( Trace, "linkWireIO", tostring( Dst ) .." has no `".. DstId .."` input" ) end
 	local output = Src.Outputs[SrcId]
-	if !output then Context.Throw( Trace, "linkWireIO", tostring( Src ) .." has no `".. SrcId .."` output" ) end
-	Path = Path or {}
 
 	if IsValid( input.Src ) then
 		if input.Src.Outputs then
-			local oldOutput = input.Src.Outputs[input.SrcId]
+			local oldOutput = input.Src.Outputs[input[SrcId]]
 			if oldOutput then
 				for k, v in ipairs( oldOutput.Connected ) do
 					if ( v.Entity == Dst ) and ( v.Name == DstId ) then
@@ -238,10 +230,21 @@ Component:AddVMFunction( "linkWireIO", "e,s,e,s,t", "b", function(Context, Trace
 	if Src.OnOutputWireLink then Src:OnOutputWireLink( SrcId, output.Type, Dst, DstId, input.Type ) end
 
 	WireLib.TriggerInput( Dst, DstId, output.Value )
-	
+end
+
+function EXPADV.linkWireIO( Context, Trace, Dst, DstId, Src, SrcId, Path ) -- Do linkWireIO with some tests
+	if !IsValid(Dst) or !WireLib.HasPorts(Dst) or !Dst.Inputs then Context.Throw( Trace, "linkWireIO", tostring( Dst ) .." has no wire inputs" ) end
+	if !IsValid(Src) or !WireLib.HasPorts(Src) or !Src.Outputs then Context.Throw( Trace, "linkWireIO", tostring( Src ) .." has no wire outputs" ) end
+	if !Dst.Inputs[DstId] then Context.Throw( Trace, "linkWireIO", tostring( Dst ) .." has no `".. DstId .."` input" ) end
+	if !Src.Outputs[SrcId] then Context.Throw( Trace, "linkWireIO", tostring( Src ) .." has no `".. SrcId .."` output" ) end
+	if !EXPADV.PPCheck( Context, Dst ) || !EXPADV.PPCheck( Context, Src ) then return end
+	Path = Path or {}
+	linkWireIO( Dst, DstId, Src, SrcId, Path )
 	return true
-end )
-EXPADV.AddFunctionAlias( "linkWireIO", "e,s,e,s" )
+end
+
+Component:AddVMFunction( "linkWireIO", "e,s,e,s", "b", function( Context, Trace, Dst, DstId, Src, SrcId ) return EXPADV.linkWireIO( Context, Trace, Dst, DstId, Src, SrcId ) end )
+Component:AddVMFunction( "linkWireIO", "e,s,e,s,t", "b", function( Context, Trace, Dst, DstId, Src, SrcId, Path ) return EXPADV.linkWireIO( Context, Trace, Dst, DstId, Src, SrcId, Path ) end )
 
 /* --- --------------------------------------------------------------------------------
 	@: Helpers
@@ -254,7 +257,8 @@ Component:AddFunctionHelper( "outputType", "wl:s", "Returns the wiretype of an o
 Component:AddFunctionHelper( "hasInput", "wl:s", "Returns true if the linked component has an input of the specified name." )
 Component:AddFunctionHelper( "isHiSpeed", "wl:", "Returns true if the wirelinked object supports the HiSpeed interface. See wiremod wiki for more information." )
 Component:AddFunctionHelper( "inputType", "wl:s", "Returns the wiretype of an input on the linked component." )
-Component:AddFunctionHelper( "linkWireIO", "e,s,e,s,t", "Wires input of first entity to output of second. 1st string - input, 2nd - output name. 5th argument of type `table` must be a wiring path, otherwise it's optional. Returns true on success." )
+Component:AddFunctionHelper( "linkWireIO", "e,s,e,s", "Wires input of first entity to output of second. 1st string - input, 2nd - output name. Returns true on success." )
+Component:AddFunctionHelper( "linkWireIO", "e,s,e,s,t", "Wires input of first entity to output of second. 1st string - input, 2nd - output name. 5th argument of type `table` must be a wiring path. Returns true on success." )
 
 /* --- --------------------------------------------------------------------------------
 	@: Events
