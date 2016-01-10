@@ -198,7 +198,7 @@ end
 Component:AddVMFunction( "writeStringZero", "wl:n,s", "n", WriteStringZero )
 Component:AddVMFunction( "readStringZero", "wl:n", "s", ReadStringZero )
 
-function linkWireIO( Dst, DstId, Src, SrcId, Path ) -- Baked: unified global function that can be then used in the whole code
+function linkWireIO( Dst, DstId, Src, SrcId ) -- Baked: unified global function that can be then used in the whole code
 	/* Modified version:
 		local function Wire_Link - as spotted in lua/wire/server/wirelib.lua */
 
@@ -220,7 +220,7 @@ function linkWireIO( Dst, DstId, Src, SrcId, Path ) -- Baked: unified global fun
 
 	input.Src = Src
 	input.SrcId = SrcId
-	input.Path = Path
+	input.Path = {}
 
 	WireLib._SetLink( input )
 
@@ -238,7 +238,7 @@ function EXPADV.linkWireIO( Context, Trace, Dst, DstId, Src, SrcId )
 	if !Dst.Inputs[DstId] then Context.Throw( Trace, "linkWireIO", tostring( Dst ) .." has no `".. DstId .."` input" ) end
 	if !Src.Outputs[SrcId] then Context.Throw( Trace, "linkWireIO", tostring( Src ) .." has no `".. SrcId .."` output" ) end
 	if !EXPADV.PPCheck( Context, Dst ) || !EXPADV.PPCheck( Context, Src ) then return end
-	linkWireIO( Dst, DstId, Src, SrcId, {} )
+	linkWireIO( Dst, DstId, Src, SrcId )
 	return true
 end
 
