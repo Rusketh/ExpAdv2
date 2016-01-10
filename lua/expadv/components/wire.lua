@@ -198,6 +198,52 @@ end
 Component:AddVMFunction( "writeStringZero", "wl:n,s", "n", WriteStringZero )
 Component:AddVMFunction( "readStringZero", "wl:n", "s", ReadStringZero )
 
+function linkWireIO( Dst, DstId, Src, SrcId ) -- Baked: unified global function that can be then used in the whole code
+	/* Modified version:
+		local function Wire_Link - as spotted in lua/wire/server/wirelib.lua */
+
+	local input = Dst.Inputs[DstId]
+	local output = Src.Outputs[SrcId]
+
+	if IsValid( input.Src ) then
+		if input.Src.Outputs then
+			local oldOutput = input.Src.Outputs[input[SrcId]]
+			if oldOutput then
+				for k, v in ipairs( oldOutput.Connected ) do
+					if ( v.Entity == Dst ) and ( v.Name == DstId ) then
+						table.remove( oldOutput.Connected, k )
+					end
+				end
+			end
+		end
+	end
+
+	input.Src = Src
+	input.SrcId = SrcId
+	input.Path = {}
+
+	WireLib._SetLink( input )
+
+	table.insert( output.Connected, { Entity = Dst, Name = DstId } )
+
+	if Dst.OnInputWireLink then Dst:OnInputWireLink( DstId, input.Type, Src, SrcId, output.Type ) end
+	if Src.OnOutputWireLink then Src:OnOutputWireLink( SrcId, output.Type, Dst, DstId, input.Type ) end
+
+	WireLib.TriggerInput( Dst, DstId, output.Value )
+end
+
+function EXPADV.linkWireIO( Context, Trace, Dst, DstId, Src, SrcId )
+	if !IsValid(Dst) or !WireLib.HasPorts(Dst) or !Dst.Inputs then Context.Throw( Trace, "linkWireIO", tostring( Dst ) .." has no wire inputs" ) end
+	if !IsValid(Src) or !WireLib.HasPorts(Src) or !Src.Outputs then Context.Throw( Trace, "linkWireIO", tostring( Src ) .." has no wire outputs" ) end
+	if !Dst.Inputs[DstId] then Context.Throw( Trace, "linkWireIO", tostring( Dst ) .." has no `".. DstId .."` input" ) end
+	if !Src.Outputs[SrcId] then Context.Throw( Trace, "linkWireIO", tostring( Src ) .." has no `".. SrcId .."` output" ) end
+	if !EXPADV.PPCheck( Context, Dst ) || !EXPADV.PPCheck( Context, Src ) then return end
+	linkWireIO( Dst, DstId, Src, SrcId )
+	return true
+end
+
+Component:AddVMFunction( "linkWireIO", "e,s,e,s", "b", EXPADV.linkWireIO )
+
 /* --- --------------------------------------------------------------------------------
 	@: Helpers
    --- */
@@ -209,6 +255,7 @@ Component:AddFunctionHelper( "outputType", "wl:s", "Returns the wiretype of an o
 Component:AddFunctionHelper( "hasInput", "wl:s", "Returns true if the linked component has an input of the specified name." )
 Component:AddFunctionHelper( "isHiSpeed", "wl:", "Returns true if the wirelinked object supports the HiSpeed interface. See wiremod wiki for more information." )
 Component:AddFunctionHelper( "inputType", "wl:s", "Returns the wiretype of an input on the linked component." )
+Component:AddFunctionHelper( "linkWireIO", "e,s,e,s", "Wires input of first `entity` to output of second. 1st `string` - input, 2nd - output name. Returns true on success." )
 
 /* --- --------------------------------------------------------------------------------
 	@: Events

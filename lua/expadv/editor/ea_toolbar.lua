@@ -338,7 +338,12 @@ local function CreateOptions( )
 	--KeyEvents:SetText( "Share Keys? " ) 
 	--KeyEvents:SetConVar( "lemon_share_keys" ) 
 	--KeyEvents:SizeToContents( )
-	
+
+	local RCBOut = vgui.Create( "DCheckBoxLabel" ) 
+	RCBOut:SetText( "Bracket auto-outdentation " ) 
+	RCBOut:SetConVar( "expadv_rcb_outdent" )
+	RCBOut:SizeToContents( )
+
 	local Cvars = Panel:Add( "DHorizontalScroller" )
 	Cvars:Dock( TOP ) 
 	Cvars:DockMargin( 10, 5, 10, 0 )
@@ -346,6 +351,7 @@ local function CreateOptions( )
 	Cvars:AddPanel( Talk )
 	--Cvars:AddPanel( Console )
 	--Cvars:AddPanel( KeyEvents )
+	Cvars:AddPanel( RCBOut )
 
 	local CC = Panel:Add( "DCheckBoxLabel" ) 
 	CC:SetText( "Enable code completion " ) 

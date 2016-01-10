@@ -99,9 +99,8 @@ end
 
 function PANEL:Think( )
 	local x, y = self:GetPos()
-	if y < 0 then
-		self:SetPos( x, 0 ) -- Force frame to stay down with roof
-	end
+	if y < 0 then self:SetPos( x, 0 )
+	elseif y > ScrH() - 25 then self:SetPos( x, ScrH() - 25 ) end
 	
 	if self.IsMoving then
 		self:SetCursor( "blank" )
