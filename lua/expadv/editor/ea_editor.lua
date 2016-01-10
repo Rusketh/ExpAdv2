@@ -891,8 +891,12 @@ function PANEL:_OnKeyCodeTyped( code )
 			end
 		elseif code == KEY_RBRACKET then
 			if shift then
-				local Caret = self.Caret:Clone( )
-				if string.Replace( self.Rows[Caret.x], " ", "" ) == "" then code = KEY_TAB end
+				local RCBOut = GetConVar("expadv_rcb_outdent")
+				RCBOut = RCBOut && RCBOut:GetBool()
+				if RCBOut then
+					local Caret = self.Caret:Clone( )
+					if string.Replace( self.Rows[Caret.x], " ", "" ) == "" then code = KEY_TAB end
+				end
 			end
 		end 
 	end
@@ -1756,6 +1760,7 @@ function PANEL:CloseCodeCompletionWindow( )
 	end
 end
 
+CreateClientConVar( "expadv_rcb_outdent", 1, true )
 CreateClientConVar( "expadv_editor_codecompletion", 1, true )
 
 vgui.Register( "EA_Editor", PANEL, "EditablePanel" ) 
