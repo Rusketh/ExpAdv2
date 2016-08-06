@@ -269,7 +269,8 @@ Component:AddVMFunction( "applyTorque", "p:v", "", function( Context, Trace, Phy
 		end
 	end
 end)
-
+Component:AddPreparedFunction( "setPos", "p:v", "", "if(IsValid(@value 1) && EXPADV.PPCheck(Context,@value 1:GetEntity())) then @value 1:SetPos(@value 2) end")
+Component:AddPreparedFunction( "setVel", "p:v", "", "if(IsValid(@value 1) && EXPADV.PPCheck(Context,@value 1:GetEntity())) then @value 1:SetVelocity(@value 2) end")
 /* --- --------------------------------------------------------------------------------
 	@: Helper
    --- */
