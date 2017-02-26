@@ -56,6 +56,27 @@ Component:AddVMFunction( "writeString", "st:s", "", function( Context, Trace, St
 	Stream.T[Stream.W] = "s"
 end )
 
+Component:AddVMFunction( "writeBool", "st:b", "", function( Context, Trace, Stream, Obj )
+	Stream.W = Stream.W + 1
+	if Stream.W >= 128 then Context:Throw( Trace, "stream", "Failed to write string to stream, maxamum stream size achived (128)" ) end
+	Stream.V[Stream.W] = Obj
+	Stream.T[Stream.W] = "b"
+end )
+
+Component:AddVMFunction( "writeArray", "st:ar", "", function( Context, Trace, Stream, Obj )
+	Stream.W = Stream.W + 1
+	if Stream.W >= 128 then Context:Throw( Trace, "stream", "Failed to write array to stream, maxamum stream size achived (128)" ) end
+	Stream.V[Stream.W] = Obj
+	Stream.T[Stream.W] = "ar"
+end )
+
+Component:AddVMFunction( "writeTable", "st:t", "", function( Context, Trace, Stream, Obj )
+	Stream.W = Stream.W + 1
+	if Stream.W >= 128 then Context:Throw( Trace, "stream", "Failed to write table to stream, maxamum stream size achived (128)" ) end
+	Stream.V[Stream.W] = Obj
+	Stream.T[Stream.W] = "t"
+end )
+
 Component:AddVMFunction( "writeEntity", "st:e", "", function( Context, Trace, Stream, Obj )
 	Stream.W = Stream.W + 1
 	if !IsValid(Obj) then Context:Throw( Trace, "stream", "Failed to write entity to stream, entity is invalid" ) end
@@ -110,6 +131,9 @@ end ); EXPADV.AddFunctionAlias( "writeStream", "st:nst" )
 Component:AddFunctionHelper( "writeBool", "st:b", "Appends a bool to the stream object." )
 Component:AddFunctionHelper( "writeNumber", "st:n", "Appends a number to the stream object." )
 Component:AddFunctionHelper( "writeString", "st:s", "Appends a string to the stream object." )
+Component:AddFunctionHelper( "writeBool", "st:b", "Appends a boolean to the stream object." )
+Component:AddFunctionHelper( "writeArray", "st:ar", "Appends an array to the stream object." )
+Component:AddFunctionHelper( "writeTable", "st:t", "Appends a table to the stream object." )
 Component:AddFunctionHelper( "writeEntity", "st:e", "Appends an entity to the stream object." )
 Component:AddFunctionHelper( "writePlayer", "st:ply", "Appends a player to the stream object." )
 Component:AddFunctionHelper( "writeVector", "st:v", "Appends a vector to the stream object." )
@@ -153,6 +177,42 @@ Component:AddVMFunction( "readString", "st:", "s", function( Context, Trace, Str
 		Context:Throw( Trace, "stream", "Failed to read string from stream, stream returned void." )
 	elseif Stream.T[Stream.R] ~= "s" then
 		Context:Throw( Trace, "stream", "Failed to read string from stream, stream returned " .. EXPADV.TypeName( Stream.T[Stream.R] )  .. "." )
+	end
+
+	return Stream.V[Stream.R]
+end )
+
+Component:AddVMFunction( "readBool", "st:", "b", function( Context, Trace, Stream )
+	Stream.R = Stream.R + 1
+	
+	if !Stream.T[Stream.R] then
+		Context:Throw( Trace, "stream", "Failed to read string from stream, stream returned void." )
+	elseif Stream.T[Stream.R] ~= "b" then
+		Context:Throw( Trace, "stream", "Failed to read string from stream, stream returned " .. EXPADV.TypeName( Stream.T[Stream.R] )  .. "." )
+	end
+
+	return Stream.V[Stream.R]
+end )
+
+Component:AddVMFunction( "readArray", "st:", "ar", function( Context, Trace, Stream )
+	Stream.R = Stream.R + 1
+	
+	if !Stream.T[Stream.R] then
+		Context:Throw( Trace, "stream", "Failed to read array from stream, stream returned void." )
+	elseif Stream.T[Stream.R] ~= "ar" then
+		Context:Throw( Trace, "stream", "Failed to read array from stream, stream returned " .. EXPADV.TypeName( Stream.T[Stream.R] )  .. "." )
+	end
+
+	return Stream.V[Stream.R]
+end )
+
+Component:AddVMFunction( "readTable", "st:", "t", function( Context, Trace, Stream )
+	Stream.R = Stream.R + 1
+	
+	if !Stream.T[Stream.R] then
+		Context:Throw( Trace, "stream", "Failed to read table from stream, stream returned void." )
+	elseif Stream.T[Stream.R] ~= "t" then
+		Context:Throw( Trace, "stream", "Failed to read table from stream, stream returned " .. EXPADV.TypeName( Stream.T[Stream.R] )  .. "." )
 	end
 
 	return Stream.V[Stream.R]
@@ -254,6 +314,9 @@ end )
 Component:AddFunctionHelper( "readBool", "st:", "Reads a bool from the stream object." )
 Component:AddFunctionHelper( "readNumber", "st:", "Reads a number from the stream object." )
 Component:AddFunctionHelper( "readString", "st:", "Reads a string from the stream object." )
+Component:AddFunctionHelper( "readBool", "st:", "Reads a boolean from the stream object." )
+Component:AddFunctionHelper( "readArray", "st:", "Reads an array from the stream object." )
+Component:AddFunctionHelper( "readTable", "st:", "Reads a table from the stream object." )
 Component:AddFunctionHelper( "readEntity", "st:", "Reads an entity from the stream object." )
 Component:AddFunctionHelper( "readPlayer", "st:", "Reads a player from the stream object." )
 Component:AddFunctionHelper( "readVector", "st:", "Reads a vector from the stream object." )

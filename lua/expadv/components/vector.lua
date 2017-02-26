@@ -266,6 +266,18 @@ Component:AddFunctionHelper( "mix", "v,v,n", "Returns the mix of 2 vectors." )
 Component:AddInlineFunction( "inrange", "v,v,v", "b", "((@value 1.x > @value 2.x and @value 1.x < @value 3.x) and (@value 1.y > @value 2.y and @value 1.y < @value 3.y) and (@value 1.z > @value 2.z and @value 1.z < @value 3.z))")
 Component:AddFunctionHelper( "inrange", "v,v,v", "Returns if the first vector is inrange of the other 2 vectors." )
 
+Component:AddInlineFunction( "ceil", "v:", "v", "Vector(math.ceil(@value 1.x), math.ceil(@value 1.y), math.ceil(@value 1.z))" )
+Component:AddFunctionHelper( "ceil", "v:", "Returns ceiled vector." )
+
+Component:AddInlineFunction( "floor", "v:", "v", "Vector(math.floor(@value 1.x), math.floor(@value 1.y), math.floor(@value 1.z))" )
+Component:AddFunctionHelper( "floor", "v:", "Returns floored vector." )
+
+Component:AddInlineFunction( "round", "v:", "v", "Vector((@value 1.x - (@value 1.x + 0.5) @modulus 1 + 0.5), (@value 1.y - (@value 1.y + 0.5) @modulus 1 + 0.5), (@value 1.z - (@value 1.z + 0.5) @modulus 1 + 0.5))" )
+Component:AddFunctionHelper( "round", "v:", "Returns rounded vector." )
+
+Component:AddInlineFunction( "abs", "v:", "v", "Vector(math.abs(@value 1.x), math.abs(@value 1.y), math.abs(@value 1.z))" )
+Component:AddFunctionHelper( "abs", "v:", "Returns vector with absolute values." )
+
 /* --- --------------------------------------------------------------------------------
     @: Headings
    --- */
