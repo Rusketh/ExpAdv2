@@ -1,5 +1,7 @@
 IMPORTANT NOTE: Support for this project has eneded.
 
+This addon is heavily deffective and should be used for refrence material only, DO NOT INSTALL THIS ON YOUR SERVER!
+
 ExpAdv2
 =======
 
