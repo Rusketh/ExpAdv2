@@ -1,6 +1,8 @@
-IMPORTANT NOTE: Support for this project has eneded.
-
+IMPORTANT NOTE:
+Support for this project has eneded.
 This addon is heavily deffective and should be used for refrence material only, DO NOT INSTALL THIS ON YOUR SERVER!
+
+Instead use ExpAdv3 its almost the same language with out any of the defects and a huge amount of improvments: https://github.com/Rusketh/ExpAdv3
 
 ExpAdv2
 =======
